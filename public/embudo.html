@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kike Abreu</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0a0e0b;
+  --ocean:#0d4a3a;
+  --teal:#0f6b52;
+  --teal-lt:#19a67e;
+  --teal-dim:rgba(15,107,82,0.15);
+  --sand:#c8a96e;
+  --sand-lt:#e0c48a;
+  --white:#f0ece4;
+  --dim:rgba(240,236,228,0.5);
+  --dimmer:rgba(240,236,228,0.2);
+  --mono:'JetBrains Mono',monospace;
+  --serif:'Lora',serif;
+  --display:'Syne',sans-serif;
+}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--white);font-family:var(--serif);-webkit-font-smoothing:antialiased;overflow:hidden;}
+
+/* GRAIN */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.5;animation:grain 0.4s steps(2) infinite;}
+@keyframes grain{0%{transform:translate(0,0)}50%{transform:translate(1px,-1px)}100%{transform:translate(-1px,1px)}}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.5s ease;overflow-y:auto;overflow-x:hidden;}
+.screen.active{opacity:1;pointer-events:all;}
+
+/* ══════════════════════════════════════
+   SCREEN 0 — VIDEO GANCHO
+══════════════════════════════════════ */
+#s0{background:var(--bg);}
+.s0-video-wrap{position:fixed;inset:0;overflow:hidden;}
+.s0-video-wrap video{width:100%;height:100%;object-fit:cover;opacity:0.35;}
+/* 🎬 MODIFICAR: reemplaza el div de placeholder con un tag <video> real */
+.s0-placeholder{position:fixed;inset:0;background:linear-gradient(160deg,#0a2a1e 0%,#051a10 40%,#020d08 100%);}
+.s0-overlay{position:fixed;inset:0;background:radial-gradient(ellipse at center bottom,rgba(15,107,82,0.2),transparent 70%),linear-gradient(to top,rgba(0,0,0,0.8) 0%,transparent 50%);}
+.s0-content{position:relative;z-index:10;text-align:center;padding:40px 24px;max-width:440px;}
+.s0-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--teal-lt);margin-bottom:24px;opacity:0;animation:fadeUp 0.6s 0.3s ease forwards;}
+.s0-question{font-family:var(--display);font-size:clamp(28px,8vw,44px);font-weight:800;line-height:1.1;margin-bottom:12px;opacity:0;animation:fadeUp 0.6s 0.6s ease forwards;}
+.s0-question em{color:var(--sand);font-style:normal;display:block;}
+.s0-sub{font-size:15px;font-style:italic;color:var(--dim);line-height:1.6;margin-bottom:40px;opacity:0;animation:fadeUp 0.6s 0.9s ease forwards;}
+.s0-cta{opacity:0;animation:fadeUp 0.6s 1.2s ease forwards;}
+.pulse-btn{background:var(--teal);border:none;color:#fff;font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:2px;padding:18px 40px;cursor:pointer;position:relative;overflow:hidden;transition:transform 0.15s;}
+.pulse-btn::after{content:'';position:absolute;inset:-2px;border:2px solid var(--teal-lt);animation:pulsering 2s ease infinite;}
+@keyframes pulsering{0%{transform:scale(1);opacity:0.7}70%{transform:scale(1.06);opacity:0}100%{transform:scale(1.06);opacity:0}}
+.pulse-btn:active{transform:scale(0.97);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══════════════════════════════════════
+   SCREEN 1 — LLAMADA ENTRANTE
+══════════════════════════════════════ */
+#s1{background:linear-gradient(180deg,#1a2a20 0%,#0a0e0b 100%);}
+.call-screen{width:100%;max-width:390px;padding:0 0 40px;display:flex;flex-direction:column;align-items:center;}
+.call-time{font-family:var(--mono);font-size:13px;color:var(--dimmer);margin-bottom:8px;letter-spacing:2px;}
+.call-location{font-family:var(--mono);font-size:11px;color:var(--dimmer);margin-bottom:48px;letter-spacing:1px;}
+.call-avatar{width:96px;height:96px;border-radius:50%;border:2px solid rgba(15,107,82,0.4);overflow:hidden;margin-bottom:16px;position:relative;}
+/* 🖼️ MODIFICAR: reemplaza el fondo del .call-avatar-img con tu foto real */
+/* Opción A: <img src="tu-foto.jpg"> dentro de .call-avatar */
+/* Opción B: background-image:url('tu-foto.jpg') en .call-avatar-img */
+.call-avatar-img{width:100%;height:100%;background:linear-gradient(135deg,var(--teal),var(--ocean));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:36px;font-weight:800;color:rgba(255,255,255,0.9);}
+.call-name{font-family:var(--display);font-size:28px;font-weight:700;letter-spacing:1px;margin-bottom:4px;}
+.call-emoji{font-size:16px;}
+.call-label{font-size:13px;color:var(--teal-lt);font-style:italic;margin-bottom:6px;}
+.call-sublabel{font-family:var(--mono);font-size:11px;color:var(--dimmer);letter-spacing:1px;margin-bottom:64px;}
+.call-actions{display:flex;gap:56px;align-items:center;}
+.call-btn{display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;border:none;background:transparent;color:var(--white);}
+.call-btn-circle{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;transition:transform 0.15s;}
+.call-btn-circle.decline{background:#e53935;}
+.call-btn-circle.answer{background:#2e7d52;animation:callpulse 1.5s ease infinite;}
+@keyframes callpulse{0%,100%{box-shadow:0 0 0 0 rgba(46,125,82,0.5)}50%{box-shadow:0 0 0 16px rgba(46,125,82,0)}}
+.call-btn-label{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dimmer);}
+.call-missed{margin-top:24px;font-family:var(--mono);font-size:11px;color:rgba(229,57,53,0.7);letter-spacing:2px;display:none;}
+.call-missed.show{display:block;}
+
+/* ══════════════════════════════════════
+   SCREEN 2 — EN LLAMADA (AUDIO 1)
+══════════════════════════════════════ */
+#s2{background:#000;}
+.active-call{width:100%;max-width:390px;padding:60px 24px 40px;display:flex;flex-direction:column;align-items:center;}
+.active-call-name{font-family:var(--display);font-size:22px;font-weight:700;margin-bottom:4px;}
+.active-call-timer{font-family:var(--mono);font-size:14px;color:var(--teal-lt);letter-spacing:3px;margin-bottom:40px;}
+.soundwave{display:flex;align-items:center;gap:4px;height:60px;margin-bottom:40px;}
+.soundwave-bar{width:4px;background:var(--teal-lt);border-radius:2px;animation:wave 1.2s ease infinite;}
+.soundwave-bar:nth-child(1){animation-delay:0s;height:20px;}
+.soundwave-bar:nth-child(2){animation-delay:0.1s;height:35px;}
+.soundwave-bar:nth-child(3){animation-delay:0.2s;height:50px;}
+.soundwave-bar:nth-child(4){animation-delay:0.3s;height:40px;}
+.soundwave-bar:nth-child(5){animation-delay:0.4s;height:55px;}
+.soundwave-bar:nth-child(6){animation-delay:0.3s;height:38px;}
+.soundwave-bar:nth-child(7){animation-delay:0.2s;height:48px;}
+.soundwave-bar:nth-child(8){animation-delay:0.1s;height:30px;}
+.soundwave-bar:nth-child(9){animation-delay:0s;height:18px;}
+@keyframes wave{0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1)}}
+.call-script{background:rgba(15,107,82,0.08);border:1px solid rgba(15,107,82,0.2);border-left:2px solid var(--teal);padding:20px;margin-bottom:32px;width:100%;}
+.call-script-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--teal-lt);margin-bottom:10px;}
+.call-script-text{font-size:14px;color:var(--dim);line-height:1.75;font-style:italic;}
+/* 🎙️ MODIFICAR: Agrega aquí el <audio> tag con tu grabación real */
+/* <audio id="audio-llamada" src="audio/llamada.mp3" autoplay></audio> */
+.call-end-btn{background:transparent;border:1px solid rgba(229,57,53,0.3);color:rgba(229,57,53,0.8);font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:14px 32px;cursor:pointer;transition:all 0.2s;width:100%;}
+.call-end-btn:hover{background:rgba(229,57,53,0.1);border-color:rgba(229,57,53,0.6);}
+
+/* ══════════════════════════════════════
+   SCREEN 3 — TERMINAL HACKER
+══════════════════════════════════════ */
+#s3{background:#000;}
+.terminal{width:100%;max-width:480px;padding:24px;}
+.term-hdr{display:flex;align-items:center;gap:8px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid rgba(15,107,82,0.2);}
+.tdot{width:10px;height:10px;border-radius:50%;}
+.tdot:nth-child(1){background:#ff5f57;}.tdot:nth-child(2){background:#febc2e;}.tdot:nth-child(3){background:#28c840;}
+.term-title{font-family:var(--mono);font-size:10px;color:var(--dimmer);letter-spacing:2px;margin-left:auto;}
+.term-body{font-family:var(--mono);font-size:12px;line-height:2;color:var(--teal-lt);}
+.term-line{display:block;opacity:0;}
+.term-line.show{opacity:1;}
+.term-line.white{color:rgba(240,236,228,0.8);}
+.term-line.sand{color:var(--sand);}
+.term-progress-line{display:flex;align-items:center;gap:10px;margin:4px 0;}
+.term-bar-wrap{flex:1;height:6px;background:rgba(15,107,82,0.15);border-radius:3px;overflow:hidden;}
+.term-bar-fill{height:100%;background:var(--teal-lt);width:0%;transition:width 1.5s ease;border-radius:3px;}
+.term-cursor{display:inline-block;width:8px;height:14px;background:var(--teal-lt);vertical-align:middle;animation:blink 0.8s step-end infinite;margin-left:2px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ══════════════════════════════════════
+   SCREEN 4 — CUESTIONARIO
+══════════════════════════════════════ */
+#s4{background:var(--bg);align-items:stretch;}
+.quiz-wrap{width:100%;max-width:480px;margin:0 auto;padding:60px 24px 80px;}
+.quiz-progress{display:flex;gap:6px;margin-bottom:40px;}
+.quiz-prog-dot{flex:1;height:3px;background:rgba(15,107,82,0.2);border-radius:2px;transition:background 0.4s;}
+.quiz-prog-dot.done{background:var(--teal-lt);}
+.quiz-intro{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--teal-lt);margin-bottom:12px;}
+.quiz-q{font-family:var(--display);font-size:clamp(20px,5vw,28px);font-weight:700;line-height:1.2;margin-bottom:32px;}
+.quiz-options{display:flex;flex-direction:column;gap:10px;}
+.quiz-opt{border:1px solid rgba(15,107,82,0.2);padding:16px 18px;cursor:pointer;display:flex;align-items:flex-start;gap:14px;transition:all 0.2s;background:transparent;}
+.quiz-opt:hover{border-color:rgba(15,107,82,0.5);background:rgba(15,107,82,0.05);}
+.quiz-opt.sel{border-color:var(--teal-lt);background:rgba(15,107,82,0.1);}
+.quiz-opt-dot{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(15,107,82,0.4);flex-shrink:0;margin-top:1px;transition:all 0.2s;display:flex;align-items:center;justify-content:center;font-size:9px;}
+.quiz-opt.sel .quiz-opt-dot{background:var(--teal-lt);border-color:var(--teal-lt);color:#fff;}
+.quiz-opt-text{font-size:15px;color:var(--dim);line-height:1.5;}
+.quiz-next{width:100%;background:var(--teal);border:none;color:#fff;font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:2px;padding:18px;cursor:pointer;margin-top:24px;opacity:0;pointer-events:none;transition:opacity 0.3s,transform 0.15s;}
+.quiz-next.show{opacity:1;pointer-events:all;}
+.quiz-next:active{transform:scale(0.98);}
+
+/* ══════════════════════════════════════
+   SCREEN 5 — ANÁLISIS / LOADING
+══════════════════════════════════════ */
+#s5{background:#000;}
+.analysis-wrap{width:100%;max-width:400px;padding:40px 24px;text-align:center;}
+.analysis-icon{font-size:48px;margin-bottom:24px;animation:spin 3s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.analysis-title{font-family:var(--display);font-size:28px;font-weight:800;margin-bottom:8px;}
+.analysis-bar-wrap{width:100%;height:4px;background:rgba(15,107,82,0.15);border-radius:2px;overflow:hidden;margin:24px 0;}
+.analysis-bar{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-lt));width:0%;border-radius:2px;transition:width 0.4s ease;}
+.analysis-status{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--teal-lt);min-height:20px;transition:opacity 0.3s;}
+.analysis-result{display:none;margin-top:32px;border:1px solid rgba(15,107,82,0.3);border-left:3px solid var(--teal-lt);padding:20px;text-align:left;}
+.analysis-result.show{display:block;}
+.analysis-result-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--teal-lt);margin-bottom:8px;}
+.analysis-result-text{font-size:15px;color:var(--white);line-height:1.6;}
+
+/* ══════════════════════════════════════
+   SCREEN 6 — WHATSAPP NOTIFICACIÓN
+══════════════════════════════════════ */
+#s6{background:linear-gradient(180deg,#1a1a2e 0%,#0a0a14 100%);}
+.lockscreen{width:100%;max-width:390px;padding:40px 20px;}
+.lock-time-big{font-family:var(--display);font-size:72px;font-weight:400;letter-spacing:-2px;text-align:center;color:rgba(240,236,228,0.9);margin-bottom:4px;}
+.lock-date{font-family:var(--serif);font-size:16px;color:var(--dimmer);text-align:center;margin-bottom:48px;font-style:italic;}
+.wa-notif{background:rgba(255,255,255,0.1);backdrop-filter:blur(20px);border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;animation:notifDrop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes notifDrop{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.wa-notif-icon{width:36px;height:36px;border-radius:10px;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.wa-notif-body{flex:1;}
+.wa-notif-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.wa-notif-app{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.5);}
+.wa-notif-time{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,0.4);}
+.wa-notif-name{font-size:14px;font-weight:600;color:rgba(255,255,255,0.9);margin-bottom:2px;}
+/* 📱 MODIFICAR: cambia el nombre en .wa-notif-name si usas un alias distinto */
+.wa-notif-msg{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.4;}
+.lock-swipe{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--dimmer);text-align:center;margin-top:48px;cursor:pointer;animation:swipepulse 2s ease infinite;}
+@keyframes swipepulse{0%,100%{opacity:0.4}50%{opacity:0.9}}
+
+/* ══════════════════════════════════════
+   SCREEN 7 — CHAT WHATSAPP
+══════════════════════════════════════ */
+#s7{background:#0a0a0a;align-items:stretch;}
+.wa-chat{width:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;height:100vh;}
+.wa-header{background:#0f1c14;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:1px solid rgba(15,107,82,0.15);}
+.wa-header-back{font-size:20px;color:var(--teal-lt);cursor:pointer;padding:4px;}
+.wa-header-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--ocean));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:14px;font-weight:800;overflow:hidden;flex-shrink:0;}
+/* 🖼️ MODIFICAR: misma foto que en .call-avatar, aquí también */
+.wa-header-info{}
+.wa-header-name{font-size:15px;font-weight:600;color:var(--white);}
+.wa-header-status{font-family:var(--mono);font-size:10px;color:var(--teal-lt);letter-spacing:1px;}
+.wa-messages{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,#0f1c14 0%,#080e09 100%);}
+.wa-msg{max-width:85%;animation:msgPop 0.3s cubic-bezier(0.34,1.3,0.64,1) both;}
+@keyframes msgPop{from{transform:scale(0.85) translateY(8px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.wa-msg.incoming{align-self:flex-start;}
+.wa-msg-bubble{background:rgba(15,107,82,0.25);border:1px solid rgba(15,107,82,0.2);border-radius:0 16px 16px 16px;padding:12px 14px;position:relative;}
+.wa-msg.incoming .wa-msg-bubble{border-radius:0 16px 16px 16px;}
+.wa-msg-text{font-size:14px;color:var(--white);line-height:1.6;}
+.wa-msg-time{font-family:var(--mono);font-size:9px;color:var(--dimmer);margin-top:5px;text-align:right;}
+
+/* AUDIO MESSAGE */
+.wa-audio{display:flex;align-items:center;gap:10px;padding:2px 0;}
+.wa-audio-play{width:36px;height:36px;border-radius:50%;background:var(--teal);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:transform 0.15s;}
+.wa-audio-play:active{transform:scale(0.92);}
+.wa-audio-wave{flex:1;display:flex;align-items:center;gap:2px;height:28px;}
+.wa-audio-wave-bar{width:3px;border-radius:2px;background:rgba(15,107,82,0.4);transition:background 0.3s;}
+.wa-audio-wave-bar.played{background:var(--teal-lt);}
+.wa-audio-wave-bar:nth-child(odd){height:60%;}
+.wa-audio-wave-bar:nth-child(even){height:100%;}
+.wa-audio-dur{font-family:var(--mono);font-size:10px;color:var(--dimmer);}
+
+/* 🎙️ MODIFICAR: Conecta cada .wa-audio-play con su archivo de audio */
+/* document.getElementById('play-audio1').addEventListener('click', () => { new Audio('audio/wa1.mp3').play() }) */
+
+.wa-typing{display:flex;align-items:center;gap:4px;padding:8px 14px;background:rgba(15,107,82,0.15);border-radius:0 16px 16px 16px;align-self:flex-start;}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:var(--teal-lt);animation:typingdot 1.2s ease infinite;}
+.typing-dot:nth-child(2){animation-delay:0.2s;}
+.typing-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes typingdot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+.wa-videocall-prompt{background:rgba(15,107,82,0.12);border:1px solid rgba(15,107,82,0.25);border-radius:12px;padding:16px;margin-top:4px;display:none;animation:msgPop 0.3s ease both;}
+.wa-videocall-prompt.show{display:block;}
+.wa-vc-text{font-size:14px;color:var(--dim);margin-bottom:12px;line-height:1.5;}
+.wa-vc-btn{width:100%;background:var(--teal);border:none;color:#fff;font-family:var(--display);font-size:16px;font-weight:700;padding:13px;cursor:pointer;border-radius:4px;letter-spacing:1px;}
+
+/* ══════════════════════════════════════
+   SCREEN 8 — VIDEOLLAMADA
+══════════════════════════════════════ */
+#s8{background:#000;}
+.videocall-wrap{width:100%;max-width:480px;height:100vh;position:relative;display:flex;flex-direction:column;}
+.vc-video{position:absolute;inset:0;background:linear-gradient(160deg,#0a2a1e,#020d08);overflow:hidden;}
+.vc-video video{width:100%;height:100%;object-fit:cover;opacity:0.7;}
+/* 🎬 MODIFICAR: pon tu video de videollamada aquí */
+/* <video src="video/videollamada.mp4" autoplay muted loop playsinline></video> */
+.vc-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.2) 40%,transparent 70%);}
+.vc-top-bar{position:relative;z-index:10;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+.vc-name{font-family:var(--display);font-size:18px;font-weight:700;}
+.vc-timer{font-family:var(--mono);font-size:13px;color:var(--teal-lt);letter-spacing:3px;}
+.vc-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.vc-avatar-big{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--ocean));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:40px;font-weight:800;border:3px solid rgba(255,255,255,0.2);}
+/* 🖼️ MODIFICAR: misma foto tuya */
+.vc-name-big{font-family:var(--display);font-size:24px;font-weight:700;}
+.vc-self{position:absolute;top:60px;right:16px;width:80px;height:110px;background:rgba(0,0,0,0.5);border-radius:12px;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;z-index:10;}
+.vc-bottom{position:relative;z-index:10;padding:20px;margin-top:auto;}
+.vc-script{background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);border:1px solid rgba(15,107,82,0.3);border-left:2px solid var(--teal-lt);padding:16px;margin-bottom:20px;}
+.vc-script-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--teal-lt);margin-bottom:8px;}
+.vc-script-text{font-size:13px;color:rgba(240,236,228,0.8);line-height:1.6;}
+/* 🎬 MODIFICAR: este texto desaparece cuando pongas video real — es referencia de guión */
+.vc-cta-btn{width:100%;background:linear-gradient(135deg,var(--teal),#0d7a5c);border:none;color:#fff;font-family:var(--display);font-size:20px;font-weight:800;padding:20px;cursor:pointer;letter-spacing:2px;position:relative;overflow:hidden;transition:transform 0.15s;animation:ctapulse 2s ease infinite;}
+@keyframes ctapulse{0%,100%{box-shadow:0 0 0 0 rgba(15,107,82,0.5)}50%{box-shadow:0 0 0 12px rgba(15,107,82,0)}}
+.vc-cta-btn:active{transform:scale(0.98);}
+.vc-subtext{font-family:var(--mono);font-size:10px;color:var(--dimmer);text-align:center;margin-top:10px;letter-spacing:1px;}
+
+/* ══════════════════════════════════════
+   SCREEN 9 — OFERTA FINAL
+══════════════════════════════════════ */
+#s9{background:var(--bg);align-items:stretch;overflow-y:auto;}
+.offer-wrap{width:100%;max-width:520px;margin:0 auto;padding:60px 24px 100px;}
+.offer-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--teal-lt);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.offer-eyebrow::after{content:'';flex:1;height:1px;background:rgba(15,107,82,0.3);}
+.offer-headline{font-family:var(--display);font-size:clamp(32px,8vw,52px);font-weight:800;line-height:1.05;margin-bottom:12px;}
+.offer-headline em{color:var(--sand);font-style:normal;display:block;}
+.offer-sub{font-size:16px;font-style:italic;color:var(--dim);line-height:1.7;margin-bottom:40px;}
+.offer-stack{margin-bottom:36px;}
+.offer-stack-title{font-family:var(--mono);font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--teal-lt);margin-bottom:16px;}
+.offer-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid rgba(15,107,82,0.1);}
+.offer-item:last-child{border-bottom:none;}
+.offer-check{width:22px;height:22px;border-radius:50%;background:rgba(15,107,82,0.2);border:1px solid var(--teal-lt);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--teal-lt);flex-shrink:0;margin-top:1px;}
+.offer-item-text{font-size:14px;color:var(--dim);line-height:1.5;}
+.offer-item-text strong{color:var(--white);}
+.offer-pricing{background:rgba(15,107,82,0.06);border:1px solid rgba(15,107,82,0.2);padding:28px;margin-bottom:24px;position:relative;overflow:hidden;}
+.offer-pricing::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--teal-lt),transparent);}
+.offer-price-option{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.offer-price-option:last-child{margin-bottom:0;}
+.offer-price-label{font-family:var(--display);font-size:15px;font-weight:700;color:var(--dim);}
+.offer-price-amount{font-family:var(--display);font-size:26px;font-weight:800;color:var(--white);}
+.offer-price-amount span{font-size:13px;font-family:var(--mono);color:var(--dimmer);font-weight:400;}
+.offer-price-save{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--sand);background:rgba(200,169,110,0.1);padding:3px 8px;}
+.offer-divider{border:none;border-top:1px solid rgba(15,107,82,0.15);margin:16px 0;}
+.offer-guarantee{display:flex;gap:14px;align-items:flex-start;background:rgba(15,107,82,0.05);border:1px dashed rgba(15,107,82,0.25);padding:18px;margin-bottom:28px;}
+.offer-guarantee-icon{font-size:28px;flex-shrink:0;}
+.offer-guarantee-text{font-size:14px;color:var(--dim);line-height:1.6;}
+.offer-guarantee-text strong{color:var(--white);display:block;margin-bottom:4px;}
+.offer-urgency{font-family:var(--mono);font-size:12px;letter-spacing:1px;color:rgba(229,57,53,0.8);background:rgba(229,57,53,0.06);border:1px solid rgba(229,57,53,0.15);padding:12px 16px;text-align:center;margin-bottom:24px;}
+.offer-cta{width:100%;background:linear-gradient(135deg,var(--teal),#0d8a66);border:none;color:#fff;font-family:var(--display);font-size:22px;font-weight:800;padding:22px;cursor:pointer;letter-spacing:2px;position:relative;overflow:hidden;transition:transform 0.15s,opacity 0.15s;margin-bottom:12px;}
+.offer-cta::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);}
+.offer-cta:hover{opacity:0.92;}
+.offer-cta:active{transform:scale(0.98);}
+.offer-cta-sub{font-family:var(--mono);font-size:11px;color:var(--dimmer);text-align:center;line-height:1.6;}
+.offer-social-proof{margin-top:48px;border-top:1px solid rgba(15,107,82,0.15);padding-top:32px;}
+.offer-sp-title{font-family:var(--mono);font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--dimmer);margin-bottom:20px;}
+.testimonial{padding:16px 0;border-bottom:1px solid rgba(15,107,82,0.08);}
+.testimonial:last-child{border-bottom:none;}
+.testimonial-text{font-size:14px;font-style:italic;color:var(--dim);line-height:1.7;margin-bottom:8px;}
+.testimonial-author{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--teal-lt);}
+.offer-kike{display:flex;gap:16px;align-items:flex-start;margin-top:40px;padding:24px;background:rgba(15,107,82,0.06);border:1px solid rgba(15,107,82,0.15);}
+.offer-kike-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--ocean));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:22px;font-weight:800;flex-shrink:0;overflow:hidden;}
+/* 🖼️ MODIFICAR: foto tuya aquí también */
+.offer-kike-body{}
+.offer-kike-name{font-family:var(--display);font-size:16px;font-weight:700;margin-bottom:2px;}
+.offer-kike-title{font-family:var(--mono);font-size:10px;color:var(--teal-lt);letter-spacing:2px;margin-bottom:8px;}
+.offer-kike-text{font-size:13px;color:var(--dim);line-height:1.6;font-style:italic;}
+
+/* UTILITIES */
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SCREEN 0 — VIDEO GANCHO
+     🎬 INSTRUCCIONES:
+     1. Graba un video de 8-12 segundos en Progreso/Telchac
+     2. Sentado en terraza, sosteniendo teléfono, vista al mar
+     3. Miras a cámara y dices la pregunta (ver guión abajo)
+     4. Reemplaza el div.s0-placeholder con:
+        <video autoplay muted loop playsinline src="video/gancho.mp4"></video>
+     5. Puedes dejar el .s0-overlay para el degradado
+══════════════════════════════════════ -->
+<div class="screen active" id="s0">
+  <div class="s0-placeholder"></div>
+  <div class="s0-overlay"></div>
+  <div class="s0-content">
+    <div class="s0-eyebrow">Kike Abreu · Mérida, Yucatán</div>
+    <h1 class="s0-question">
+      ¿Cuántos prospectos te llegaron esta semana
+      <em>sin que los fueras a buscar?</em>
+    </h1>
+    <p class="s0-sub">Si la respuesta te incomoda... esto es para ti.</p>
+    <div class="s0-cta">
+      <button class="pulse-btn" onclick="goScreen(1)">QUIERO SABER →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 1 — LLAMADA ENTRANTE
+     📱 INSTRUCCIONES:
+     1. El nombre "Kike Abreu 🏖️" ya está — no cambiar
+     2. Para agregar tu foto: dentro de .call-avatar pon:
+        <img src="img/kike.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+     3. Si el usuario no contesta en 5s → auto-redial (ya programado abajo)
+     4. Si rechaza → aparece mensaje y re-llama en 3s
+══════════════════════════════════════ -->
+<div class="screen" id="s1">
+  <div class="call-screen">
+    <div class="call-time" id="call-clock">9:41</div>
+    <div class="call-location">Mérida, Yucatán</div>
+    <div class="call-avatar">
+      <div class="call-avatar-img">KA</div>
+      <!-- 🖼️ MODIFICAR: descomenta y pon tu foto -->
+      <!-- <img src="img/kike.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;top:0;left:0;"> -->
+    </div>
+    <div class="call-name">Kike Abreu <span class="call-emoji">🏖️</span></div>
+    <div class="call-label">Llamada entrante</div>
+    <div class="call-sublabel">MÉRIDA · YUCATÁN</div>
+    <div class="call-actions">
+      <button class="call-btn" onclick="declineCall()">
+        <div class="call-btn-circle decline">📵</div>
+        <div class="call-btn-label">Rechazar</div>
+      </button>
+      <button class="call-btn" onclick="answerCall()">
+        <div class="call-btn-circle answer">📞</div>
+        <div class="call-btn-label">Contestar</div>
+      </button>
+    </div>
+    <div class="call-missed" id="call-missed">Llamada perdida — Kike Abreu</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 2 — EN LLAMADA (AUDIO 1)
+     🎙️ INSTRUCCIONES:
+     1. Graba el audio con el guión de abajo (90 segundos)
+     2. Agrega antes del </div> de .active-call:
+        <audio id="audio-llamada" src="audio/llamada.mp3" autoplay></audio>
+     3. El botón "La llamada terminó" avanza automáticamente
+        — puedes hacerlo avanzar cuando termine el audio:
+        document.getElementById('audio-llamada').onended = () => goScreen(3);
+     4. El texto del .call-script es de referencia — puedes ocultarlo
+        en producción con display:none
+══════════════════════════════════════ -->
+<div class="screen" id="s2">
+  <div class="active-call">
+    <div class="active-call-name">Kike Abreu 🏖️</div>
+    <div class="active-call-timer" id="call-timer">0:00</div>
+    <div class="soundwave">
+      <div class="soundwave-bar"></div><div class="soundwave-bar"></div>
+      <div class="soundwave-bar"></div><div class="soundwave-bar"></div>
+      <div class="soundwave-bar"></div><div class="soundwave-bar"></div>
+      <div class="soundwave-bar"></div><div class="soundwave-bar"></div>
+      <div class="soundwave-bar"></div>
+    </div>
+    <div class="call-script">
+      <div class="call-script-label">🎙️ Guión — graba este audio</div>
+      <div class="call-script-text">
+        "Qué bueno que contestaste. Soy Kike Abreu — el de Nómadas Inversionistas, sí. Pero hoy no te llamo por eso. Te llamo porque llevo semanas viendo algo que me preocupa en el mercado de asesores aquí en Mérida. (...) Mientras tanto hay asesores — menos capaces que tú — que tienen lista de espera de clientes. Porque descubrieron algo que la mayoría no sabe todavía. En los últimos 6 años yo moví más de dos millones de dólares en bienes raíces en estas playas. No fue suerte. Fue un sistema. Y ese mismo sistema... lo adapté para asesores como tú, aquí en Mérida. Necesito verificar una cosa antes de contarte más. ¿Me das 40 segundos?"
+      </div>
+    </div>
+    <!-- 🎙️ MODIFICAR: descomenta cuando tengas el audio -->
+    <!-- <audio id="audio-llamada" src="audio/llamada.mp3" autoplay></audio> -->
+    <button class="call-end-btn" onclick="goScreen(3)">La llamada terminó →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 3 — TERMINAL HACKER
+     ⚙️ No requiere modificación — es automático
+     El texto de colonias (Temozón, Cholul, etc.) puedes
+     ajustarlo a las zonas donde trabajas tú
+══════════════════════════════════════ -->
+<div class="screen" id="s3">
+  <div class="terminal">
+    <div class="term-hdr">
+      <div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>
+      <div class="term-title">SISTEMA · VERIFICACIÓN</div>
+    </div>
+    <div class="term-body" id="term-body"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 4 — CUESTIONARIO (3 preguntas)
+     ✏️ INSTRUCCIONES:
+     - Las preguntas y opciones ya están escritas con copy real
+     - Si quieres cambiar alguna opción, busca .quiz-opt-text
+     - El flujo avanza automáticamente al seleccionar + Next
+══════════════════════════════════════ -->
+<div class="screen" id="s4">
+  <div class="quiz-wrap">
+    <div class="quiz-progress">
+      <div class="quiz-prog-dot done" id="qp0"></div>
+      <div class="quiz-prog-dot" id="qp1"></div>
+      <div class="quiz-prog-dot" id="qp2"></div>
+    </div>
+    <div class="quiz-intro" id="quiz-intro">Kike necesita entenderte</div>
+    <div class="quiz-q" id="quiz-question">¿Qué pasa la mayoría de las semanas con tus prospectos?</div>
+    <div class="quiz-options" id="quiz-options">
+      <div class="quiz-opt" onclick="selectOpt(this)">
+        <div class="quiz-opt-dot">✓</div>
+        <div class="quiz-opt-text">Me llegan del portal, preguntan precio y se desaparecen 🔴</div>
+      </div>
+      <div class="quiz-opt" onclick="selectOpt(this)">
+        <div class="quiz-opt-dot">✓</div>
+        <div class="quiz-opt-text">Dependo de que algún conocido me refiera a alguien 🟡</div>
+      </div>
+      <div class="quiz-opt" onclick="selectOpt(this)">
+        <div class="quiz-opt-dot">✓</div>
+        <div class="quiz-opt-text">Posteo en redes pero nadie me escribe para comprar 🟠</div>
+      </div>
+    </div>
+    <button class="quiz-next" id="quiz-next" onclick="nextQuestion()">CONTINUAR →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 5 — ANÁLISIS
+     ⚙️ Automático — no requiere modificación
+     Los textos del análisis están en el JS (statusSteps)
+══════════════════════════════════════ -->
+<div class="screen" id="s5">
+  <div class="analysis-wrap">
+    <div class="analysis-icon">🌊</div>
+    <div class="analysis-title">Analizando tu situación...</div>
+    <div class="analysis-bar-wrap">
+      <div class="analysis-bar" id="analysis-bar"></div>
+    </div>
+    <div class="analysis-status" id="analysis-status">Iniciando diagnóstico...</div>
+    <div class="analysis-result" id="analysis-result">
+      <div class="analysis-result-label">Diagnóstico Kike Abreu</div>
+      <div class="analysis-result-text" id="analysis-result-text"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 6 — NOTIFICACIÓN WHATSAPP
+     📱 INSTRUCCIONES:
+     - El mensaje ya está escrito
+     - La hora se actualiza automáticamente con JS
+     - "Desliza para abrir" avanza al chat
+══════════════════════════════════════ -->
+<div class="screen" id="s6">
+  <div class="lockscreen">
+    <div class="lock-time-big" id="lock-time">9:41</div>
+    <div class="lock-date" id="lock-date">domingo, 8 de marzo</div>
+    <div class="wa-notif">
+      <div class="wa-notif-icon">💬</div>
+      <div class="wa-notif-body">
+        <div class="wa-notif-header">
+          <div class="wa-notif-app">WHATSAPP</div>
+          <div class="wa-notif-time" id="notif-time">ahora</div>
+        </div>
+        <!-- 📱 MODIFICAR: puedes cambiar el mensaje de la notificación -->
+        <div class="wa-notif-name">Kike Abreu 🏖️</div>
+        <div class="wa-notif-msg">Listo. Ya vi tu diagnóstico. Escúchame esto — es lo más importante que vas a oír hoy sobre tu negocio en Mérida 👇</div>
+      </div>
+    </div>
+    <div class="lock-swipe" onclick="goScreen(7)">— desliza para abrir —</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 7 — CHAT WHATSAPP (3 audios)
+     🎙️ INSTRUCCIONES CRÍTICAS:
+     1. Graba 3 audios con los guiones de abajo
+     2. Nombra los archivos: audio/wa1.mp3, audio/wa2.mp3, audio/wa3.mp3
+     3. Conecta cada botón play con su audio:
+        En el JS busca "// AUDIO CONNECTIONS" y descomenta las líneas
+     4. Los audios aparecen en secuencia automáticamente
+     5. La duración debajo de cada audio: cámbiala por la duración real
+        Busca "1:25", "1:42", "1:05" y reemplaza con tu tiempo real
+══════════════════════════════════════ -->
+<div class="screen" id="s7">
+  <div class="wa-chat">
+    <div class="wa-header">
+      <div class="wa-header-back">‹</div>
+      <div class="wa-header-avatar">KA</div>
+      <div class="wa-header-info">
+        <div class="wa-header-name">Kike Abreu 🏖️</div>
+        <div class="wa-header-status">en línea</div>
+      </div>
+    </div>
+    <div class="wa-messages" id="wa-messages">
+      <!-- Los mensajes aparecen con JS automáticamente -->
+    </div>
+    <!-- Guiones de referencia ocultos en producción -->
+    <div style="display:none" id="wa-scripts">
+      <!-- 🎙️ GUIÓN AUDIO 1 (75 seg): "Oye... vi tus respuestas y me quedó claro algo. El problema no es que seas mal asesor. Es que estás usando las herramientas de 2015 en el mercado de 2025. Los portales fueron útiles. Pero hoy compites con 847 asesores activos en Yucatán. Y los referidos dependen de que alguien se acuerde de ti en el momento exacto. Eso no es un negocio. Es suerte disfrazada de estrategia. El asesor que está ganando hoy no persigue clientes. Los atrae. Y hay una diferencia enorme entre los dos." -->
+      <!-- 🎙️ GUIÓN AUDIO 2 (90 seg): "Cuando empecé a mover propiedades en la playa... cometí el mismo error que tú. Confiaba en que el producto hablara solo. Y no llegaban clientes. Hasta que entendí algo que cambió todo: la gente no compra propiedades. Compra la historia. Y si tú no eres el que cuenta esa historia primero en redes — alguien más lo hace. Y ese alguien se lleva al cliente. Lo que construí se llama el Sistema de Embudo Invertido. No vendes. Atraes. No persigues. Posicionas. Y cuando el prospecto llega a ti... ya viene convencido." -->
+      <!-- 🎙️ GUIÓN AUDIO 3 (60 seg): "Marco — asesor en Temozón Norte — llevaba dos años en portales, cero tracción en redes. En 38 días: 14 prospectos calificados llegaron solos a su WhatsApp. Cerró dos operaciones. Una en Cholul, otra en Montebello. No cambió las propiedades. Solo cambió cómo lo encontraban. Hay dos spots en Mérida este mes. Si quieres que te cuente cómo funciona exactamente — contesta con SÍ." -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 8 — VIDEOLLAMADA KIKE
+     🎬 INSTRUCCIONES:
+     1. Graba un video de 3-4 minutos con el guión de abajo
+     2. Desde tu terraza/playa, tono directo como llamada real
+     3. Descomenta el <video> tag y agrega tu archivo
+     4. El botón CTA lleva a WhatsApp — ya tiene tu número
+     5. Cambia el número en la URL del wa.me si es necesario
+     GUIÓN: "Perfecto que estás aquí. El Sistema de Embudo
+     Invertido tiene tres fases: ATRAER, RETENER, CONVERTIR.
+     Yo hago todo por ti. Cuesta $10,000/mes con garantía de
+     30 días. Solo trabajo un asesor por zona. Quedan 3 spots."
+══════════════════════════════════════ -->
+<div class="screen" id="s8">
+  <div class="videocall-wrap">
+    <div class="vc-video">
+      <!-- 🎬 MODIFICAR: descomenta cuando tengas el video -->
+      <!-- <video src="video/videollamada.mp4" autoplay playsinline></video> -->
+      <div class="vc-placeholder">
+        <div class="vc-avatar-big">KA</div>
+        <div class="vc-name-big">Kike Abreu</div>
+      </div>
+    </div>
+    <div class="vc-overlay"></div>
+    <div class="vc-top-bar">
+      <div class="vc-name">Kike Abreu 🏖️</div>
+      <div class="vc-timer" id="vc-timer">0:00</div>
+    </div>
+    <div class="vc-self">🙂</div>
+    <div class="vc-bottom">
+      <div class="vc-script">
+        <div class="vc-script-label">🎬 Referencia de guión (ocultar en producción)</div>
+        <div class="vc-script-text">
+          "Perfecto. El Sistema de Embudo Invertido tiene 3 fases: ATRAER (contenido que para el scroll), RETENER (autoridad de zona) y CONVERTIR (prospectos que llegan calientes). Yo hago todo por ti. $10,000/mes con garantía 30 días. Solo 1 asesor por zona. 3 spots en Mérida. ¿Quieres el tuyo?"
+        </div>
+      </div>
+      <!-- 🔗 MODIFICAR: el número de WhatsApp ya es el tuyo (9999068010) -->
+      <!-- Si quieres cambiar el mensaje pre-llenado, modifica el parámetro &text= -->
+      <button class="vc-cta-btn" onclick="goScreen(9)">QUIERO MI SPOT →</button>
+      <div class="vc-subtext">Tap para ver la oferta completa</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 9 — OFERTA FINAL
+     💰 INSTRUCCIONES:
+     1. Los precios ya están: $10,000/mes y $27,000 trimestral
+     2. La fecha dinámica de urgencia se genera automáticamente con JS
+     3. El botón CTA lleva a tu WhatsApp con mensaje pre-llenado
+     4. Para cambiar el link de pago: busca "wa.me/5219999068010"
+     5. Los testimoniales son placeholder — reemplázalos con los reales
+        de tus clientes (Marco de Temozón, etc.)
+     6. Tu foto en .offer-kike-avatar igual que en los otros avatares
+══════════════════════════════════════ -->
+<div class="screen" id="s9">
+  <div class="offer-wrap">
+    <div class="offer-eyebrow">Oferta exclusiva para asesores en Mérida</div>
+    <h2 class="offer-headline">
+      Deja de ser uno más
+      <em>en Inmuebles24.</em>
+    </h2>
+    <p class="offer-sub">
+      Conviértete en el asesor que los clientes buscan en tu zona — sin depender de portales, sin perseguir referidos y sin saber de marketing.
+    </p>
+
+    <div class="offer-stack">
+      <div class="offer-stack-title">Lo que incluye el sistema</div>
+      <div class="offer-item">
+        <div class="offer-check">✓</div>
+        <div class="offer-item-text"><strong>Sistema completo de contenido para redes</strong> — Hecho para ti, adaptado a tu zona en Mérida</div>
+      </div>
+      <div class="offer-item">
+        <div class="offer-check">✓</div>
+        <div class="offer-item-text"><strong>Estrategia de posicionamiento de zona</strong> — Eres el referente, no uno más del montón</div>
+      </div>
+      <div class="offer-item">
+        <div class="offer-check">✓</div>
+        <div class="offer-item-text"><strong>Embudo de conversión activo 24/7</strong> — Prospectos calificados llegan solos a tu WhatsApp</div>
+      </div>
+      <div class="offer-item">
+        <div class="offer-check">✓</div>
+        <!-- 💰 MODIFICAR: ajusta el rango de ad spend si cambia -->
+        <div class="offer-item-text"><strong>$2,000–$5,000 MXN de pauta gestionada</strong> — Tú pones el presupuesto, yo lo ejecuto</div>
+      </div>
+      <div class="offer-item">
+        <div class="offer-check">✓</div>
+        <div class="offer-item-text"><strong>Reportes quincenales de resultados</strong> — Sabes exactamente qué está pasando</div>
+      </div>
+      <div class="offer-item">
+        <div class="offer-check">✓</div>
+        <div class="offer-item-text"><strong>Acceso directo a Kike por WhatsApp</strong> — Primer mes con acceso prioritario</div>
+      </div>
+    </div>
+
+    <div class="offer-pricing">
+      <div class="offer-price-option">
+        <div class="offer-price-label">Mensual</div>
+        <div class="offer-price-amount">$10,000 <span>MXN/mes</span></div>
+      </div>
+      <div class="offer-divider"></div>
+      <div class="offer-price-option">
+        <div class="offer-price-label">Trimestral</div>
+        <div class="offer-price-amount">$27,000 <span>MXN</span></div>
+      </div>
+      <div style="text-align:right;margin-top:6px;">
+        <span class="offer-price-save">AHORRAS $3,000 MXN</span>
+      </div>
+    </div>
+
+    <div class="offer-guarantee">
+      <div class="offer-guarantee-icon">🛡️</div>
+      <div class="offer-guarantee-text">
+        <strong>Garantía de 30 días sin riesgo</strong>
+        Si en el primer mes no tienes al menos 10 prospectos calificados llegando solos, te devuelvo cada peso. Sin preguntas.
+      </div>
+    </div>
+
+    <!-- ⏰ La fecha se genera automáticamente con JS — no modificar -->
+    <div class="offer-urgency" id="offer-urgency">
+      ⏰ Solo quedan 3 spots disponibles en Mérida · Precio vigente hasta el <span id="urgency-date"></span>
+    </div>
+
+    <!-- 🔗 MODIFICAR: cambia el texto del mensaje si quieres -->
+    <button class="offer-cta" onclick="window.open('https://wa.me/5219999068010?text=Kike%2C+vi+el+sistema.+Quiero+el+spot+de+mi+zona+en+M%C3%A9rida.','_blank')">
+      QUIERO MI SPOT EN MÉRIDA →
+    </button>
+    <div class="offer-cta-sub">
+      Te escribo en WhatsApp en menos de 2 horas · Sin compromiso
+    </div>
+
+    <div class="offer-social-proof">
+      <div class="offer-sp-title">Asesores que ya usan el sistema</div>
+      <!-- ✏️ MODIFICAR: reemplaza con testimoniales reales de tus clientes -->
+      <!-- Usa nombres reales, zonas reales, números reales de prospectos -->
+      <div class="testimonial">
+        <div class="testimonial-text">"En 38 días tuve 14 prospectos calificados llegando solos a mi WhatsApp. Cerré dos operaciones en Cholul y Montebello. Nunca pensé que las redes podían funcionar así para mí."</div>
+        <div class="testimonial-author">Marco R. · Temozón Norte · 2 cierres en 38 días</div>
+      </div>
+      <div class="testimonial">
+        <div class="testimonial-text">"Llevaba 2 años dependiendo de referidos. Ahora tengo una agenda llena de citas con gente que ya me conoce, ya confía en mí y ya quiere ver propiedades."</div>
+        <!-- ✏️ MODIFICAR: nombre y zona reales -->
+        <div class="testimonial-author">Ana P. · Itzimná · 10 prospectos / primer mes</div>
+      </div>
+    </div>
+
+    <div class="offer-kike">
+      <div class="offer-kike-avatar">KA</div>
+      <div class="offer-kike-body">
+        <div class="offer-kike-name">Kike Abreu</div>
+        <div class="offer-kike-title">El Maestro de las Inversiones en la Playa</div>
+        <div class="offer-kike-text">"6 años, más de $2M USD en bienes raíces yucatecos y más de 300 inversionistas acompañados. Ahora pongo ese mismo sistema al servicio de los asesores que quieren dominar su zona en Mérida."</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// NAVEGACIÓN
+// ══════════════════════════════════════════════
+let currentScreen = 0;
+
+function goScreen(n){
+  document.getElementById('s'+currentScreen).classList.remove('active');
+  document.getElementById('s'+n).classList.add('active');
+  currentScreen = n;
+  onScreenEnter(n);
+}
+
+function onScreenEnter(n){
+  if(n===1) initCallScreen();
+  if(n===2) initCallTimer();
+  if(n===3) initTerminal();
+  if(n===5) initAnalysis();
+  if(n===6) initLockScreen();
+  if(n===7) initWAChat();
+  if(n===8) initVideocall();
+  if(n===9) initOffer();
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 1 — LLAMADA ENTRANTE
+// ══════════════════════════════════════════════
+function initCallScreen(){
+  // Actualiza hora real
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('call-clock').textContent = h+':'+m;
+
+  // Auto-redial si no contesta en 5 segundos
+  autoRedialTimer = setTimeout(()=>{
+    const missed = document.getElementById('call-missed');
+    missed.classList.add('show');
+    missed.textContent = 'Llamada perdida — Kike Abreu 🏖️';
+    setTimeout(()=>{
+      missed.classList.remove('show');
+      missed.textContent = '';
+      // Re-llama
+      setTimeout(()=> missed.textContent = '', 200);
+    }, 2500);
+  }, 5000);
+}
+
+let autoRedialTimer;
+
+function declineCall(){
+  clearTimeout(autoRedialTimer);
+  const missed = document.getElementById('call-missed');
+  missed.textContent = '📵 Llamada rechazada... volviendo a llamar';
+  missed.classList.add('show');
+  setTimeout(()=>{
+    missed.classList.remove('show');
+  }, 3000);
+  // Re-llama en 3 segundos
+  setTimeout(()=> {
+    // Reset visual para simular nueva llamada
+    document.querySelector('.call-btn-circle.answer').style.animation='none';
+    setTimeout(()=> document.querySelector('.call-btn-circle.answer').style.animation='',100);
+  }, 3200);
+}
+
+function answerCall(){
+  clearTimeout(autoRedialTimer);
+  goScreen(2);
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 2 — TIMER DE LLAMADA
+// ══════════════════════════════════════════════
+let callTimerInterval;
+function initCallTimer(){
+  let secs = 0;
+  clearInterval(callTimerInterval);
+  callTimerInterval = setInterval(()=>{
+    secs++;
+    const m = Math.floor(secs/60);
+    const s = (secs%60).toString().padStart(2,'0');
+    document.getElementById('call-timer').textContent = m+':'+s;
+  },1000);
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 3 — TERMINAL HACKER
+// ══════════════════════════════════════════════
+const termLines = [
+  {text:'> Iniciando Sistema de Verificación...', cls:'', delay:200},
+  {text:'> Conectando con base de datos de Mérida...', cls:'', delay:600},
+  {text:'> Ubicación confirmada: Mérida, Yucatán ✓', cls:'white', delay:1200},
+  {text:'> Escaneando mercado inmobiliario activo...', cls:'', delay:1800},
+  {text:'> Zonas detectadas: Temozón · Cholul · Itzimná · Montebello · Chuburná...', cls:'', delay:2400},
+  {text:'> Analizando competencia activa en zona...', cls:'', delay:3000},
+  // 🗺️ MODIFICAR: ajusta el número de asesores si tienes dato más preciso
+  {text:'> 847 asesores activos en Yucatán detectados', cls:'white', delay:3600},
+  {text:'> Calculando brecha de posicionamiento digital...', cls:'', delay:4200},
+  {text:'', cls:'', delay:4600},
+  {text:'> ANALIZANDO PERFIL ████████████████ 100%', cls:'sand', delay:5000},
+  {text:'', cls:'', delay:5600},
+  {text:'> Perfil compatible con Sistema Embudo Invertido™', cls:'sand', delay:6000},
+  {text:'> Cargando diagnóstico personalizado...', cls:'', delay:6600},
+];
+
+function initTerminal(){
+  const body = document.getElementById('term-body');
+  body.innerHTML = '';
+  termLines.forEach((line, i)=>{
+    setTimeout(()=>{
+      const span = document.createElement('span');
+      span.className = 'term-line show '+(line.cls||'');
+      if(line.text.includes('████')){
+        span.innerHTML = '> ANALIZANDO PERFIL <span id="term-prog-bar">█</span> <span id="term-prog-pct">0%</span>';
+        animateTermBar();
+      } else {
+        span.textContent = line.text;
+      }
+      body.appendChild(span);
+      if(line.text) body.appendChild(document.createElement('br'));
+      body.scrollTop = body.scrollHeight;
+
+      // Avanza a cuestionario después del último
+      if(i === termLines.length-1){
+        setTimeout(()=> goScreen(4), 1200);
+      }
+    }, line.delay);
+  });
+}
+
+function animateTermBar(){
+  let pct = 0;
+  const bars = '████████████████';
+  const pctEl = document.getElementById('term-prog-pct');
+  const barEl = document.getElementById('term-prog-bar');
+  const iv = setInterval(()=>{
+    pct += 4;
+    if(pct>=100){ pct=100; clearInterval(iv); }
+    if(barEl) barEl.textContent = bars.substring(0, Math.floor(pct/6.25));
+    if(pctEl) pctEl.textContent = pct+'%';
+  }, 60);
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 4 — CUESTIONARIO
+// ══════════════════════════════════════════════
+const questions = [
+  {
+    intro: 'Kike necesita entenderte',
+    q: '¿Qué pasa la mayoría de las semanas con tus prospectos?',
+    opts: [
+      'Me llegan del portal, preguntan precio y se desaparecen 🔴',
+      'Dependo de que algún conocido me refiera a alguien 🟡',
+      'Posteo en redes pero nadie me escribe para comprar 🟠'
+    ]
+  },
+  {
+    intro: 'Pregunta 2 de 3',
+    q: 'Cuando alguien sí te contacta por redes... ¿cómo llega?',
+    opts: [
+      'Frío, sin contexto, preguntando si "tienes algo por X zona" 😤',
+      'Me conoce de vista pero no sabe bien qué hago 😐',
+      'Casi nunca me contactan por redes, la verdad 😞'
+    ]
+  },
+  {
+    intro: 'Última pregunta',
+    q: '¿Qué te detiene de tener un flujo constante de prospectos calificados?',
+    opts: [
+      'No sé si invertir en publicidad funciona para mi zona 💸',
+      'No sé qué publicar sin sonar a vendedor desesperado 📱',
+      'Estoy tan ocupado atendiendo clientes que no tengo sistema ⏰'
+    ]
+  }
+];
+
+let currentQ = 0;
+let answers = [];
+
+function selectOpt(el){
+  document.querySelectorAll('.quiz-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  el.querySelector('.quiz-opt-dot').textContent='✓';
+  document.getElementById('quiz-next').classList.add('show');
+}
+
+function nextQuestion(){
+  const sel = document.querySelector('.quiz-opt.sel');
+  if(!sel) return;
+  answers.push(sel.querySelector('.quiz-opt-text').textContent);
+
+  currentQ++;
+  if(currentQ >= questions.length){
+    goScreen(5);
+    return;
+  }
+  // Actualiza barra de progreso
+  document.getElementById('qp'+currentQ).classList.add('done');
+
+  // Carga siguiente pregunta
+  const data = questions[currentQ];
+  document.getElementById('quiz-intro').textContent = data.intro;
+  document.getElementById('quiz-question').textContent = data.q;
+
+  const optsEl = document.getElementById('quiz-options');
+  optsEl.innerHTML = data.opts.map(o=>`
+    <div class="quiz-opt" onclick="selectOpt(this)">
+      <div class="quiz-opt-dot">✓</div>
+      <div class="quiz-opt-text">${o}</div>
+    </div>
+  `).join('');
+  document.getElementById('quiz-next').classList.remove('show');
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 5 — ANÁLISIS
+// ══════════════════════════════════════════════
+const statusSteps = [
+  [15, 'Analizando tus respuestas...'],
+  [35, 'Comparando con mercado de Mérida...'],
+  [55, 'Calculando brecha de posicionamiento...'],
+  [75, 'Identificando tu zona de oportunidad...'],
+  [90, 'Generando diagnóstico personalizado...'],
+  [100, 'Diagnóstico listo ✓'],
+];
+
+function initAnalysis(){
+  const bar = document.getElementById('analysis-bar');
+  const status = document.getElementById('analysis-status');
+  let i = 0;
+  const iv = setInterval(()=>{
+    if(i >= statusSteps.length){ clearInterval(iv); return; }
+    bar.style.width = statusSteps[i][0]+'%';
+    status.textContent = statusSteps[i][1];
+    i++;
+  }, 700);
+
+  setTimeout(()=>{
+    const result = document.getElementById('analysis-result');
+    const resultText = document.getElementById('analysis-result-text');
+    // Mensaje personalizado según la primera respuesta
+    const ans = answers[0] || '';
+    let msg = '';
+    if(ans.includes('portal')) msg = 'Estás en el 73% de asesores en Mérida que dependen de portales. La buena noticia: cambiar eso es exactamente lo que hace el Sistema de Embudo Invertido.';
+    else if(ans.includes('refiera')) msg = 'Los referidos son el sistema más frágil que existe. Sin predecibilidad, no hay negocio. El Embudo Invertido cambia eso completamente.';
+    else msg = 'Tienes presencia en redes pero sin sistema de conversión. Eso es fácil de resolver — y los resultados se ven en menos de 45 días.';
+    resultText.textContent = msg;
+    result.classList.add('show');
+    setTimeout(()=> goScreen(6), 2800);
+  }, 4800);
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 6 — LOCKSCREEN
+// ══════════════════════════════════════════════
+function initLockScreen(){
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('lock-time').textContent = h+':'+m;
+
+  const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  document.getElementById('lock-date').textContent =
+    dias[now.getDay()]+', '+now.getDate()+' de '+meses[now.getMonth()];
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 7 — CHAT WHATSAPP
+// ══════════════════════════════════════════════
+const waSequence = [
+  {type:'text', text:'Listo. Vi tu diagnóstico.', delay:800},
+  {type:'text', text:'Y quiero que escuches esto antes de seguir.', delay:2000},
+  {type:'typing', delay:3200, duration:2000},
+  {type:'audio', id:'audio1', duration:'1:25', label:'Audio de Kike', delay:5400},
+  {type:'typing', delay:9000, duration:1500},
+  {type:'audio', id:'audio2', duration:'1:42', label:'Audio de Kike', delay:10700},
+  {type:'typing', delay:15000, duration:1500},
+  {type:'audio', id:'audio3', duration:'1:05', label:'Audio de Kike', delay:16700},
+  {type:'videocall-prompt', delay:20000},
+];
+
+function initWAChat(){
+  const msgs = document.getElementById('wa-messages');
+  msgs.innerHTML = '';
+  let typingEl = null;
+
+  waSequence.forEach(item => {
+    setTimeout(()=>{
+      if(item.type==='typing'){
+        typingEl = document.createElement('div');
+        typingEl.className = 'wa-typing';
+        typingEl.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+        msgs.appendChild(typingEl);
+        msgs.scrollTop = msgs.scrollHeight;
+        setTimeout(()=>{ if(typingEl) typingEl.remove(); }, item.duration);
+      }
+      else if(item.type==='text'){
+        const msg = document.createElement('div');
+        msg.className = 'wa-msg incoming';
+        msg.innerHTML = `<div class="wa-msg-bubble"><div class="wa-msg-text">${item.text}</div><div class="wa-msg-time">ahora</div></div>`;
+        msgs.appendChild(msg);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+      else if(item.type==='audio'){
+        const msg = document.createElement('div');
+        msg.className = 'wa-msg incoming';
+        // Genera barras de onda aleatoria
+        let bars = '';
+        for(let i=0;i<28;i++) bars += `<div class="wa-audio-wave-bar" style="height:${20+Math.random()*80}%"></div>`;
+        msg.innerHTML = `
+          <div class="wa-msg-bubble">
+            <div class="wa-audio">
+              <button class="wa-audio-play" id="${item.id}" onclick="playAudio('${item.id}')">▶</button>
+              <div class="wa-audio-wave">${bars}</div>
+              <div class="wa-audio-dur">${item.duration}</div>
+            </div>
+          </div>`;
+        msgs.appendChild(msg);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+      else if(item.type==='videocall-prompt'){
+        const prompt = document.createElement('div');
+        prompt.className = 'wa-videocall-prompt show';
+        prompt.innerHTML = `
+          <div class="wa-vc-text">📹 Kike quiere mostrarte exactamente cómo funciona el sistema.<br>Es una videollamada de 4 minutos — sin rodeos.</div>
+          <button class="wa-vc-btn" onclick="goScreen(8)">CONTESTAR VIDEOLLAMADA →</button>`;
+        msgs.appendChild(prompt);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+    }, item.delay);
+  });
+}
+
+function playAudio(id){
+  const btn = document.getElementById(id);
+  // 🎙️ AUDIO CONNECTIONS — descomenta cuando tengas los archivos:
+  // if(id==='audio1') { const a = new Audio('audio/wa1.mp3'); a.play(); }
+  // if(id==='audio2') { const a = new Audio('audio/wa2.mp3'); a.play(); }
+  // if(id==='audio3') { const a = new Audio('audio/wa3.mp3'); a.play(); }
+  btn.textContent = '⏸';
+  setTimeout(()=> btn.textContent='▶', 3000);
+  // Anima las barras de la onda
+  const bars = btn.closest('.wa-audio').querySelectorAll('.wa-audio-wave-bar');
+  bars.forEach((b,i)=> setTimeout(()=>b.classList.add('played'), i*60));
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 8 — VIDEOLLAMADA
+// ══════════════════════════════════════════════
+let vcTimerInterval;
+function initVideocall(){
+  let secs = 0;
+  clearInterval(vcTimerInterval);
+  vcTimerInterval = setInterval(()=>{
+    secs++;
+    const m = Math.floor(secs/60);
+    const s = (secs%60).toString().padStart(2,'0');
+    document.getElementById('vc-timer').textContent = m+':'+s;
+  },1000);
+}
+
+// ══════════════════════════════════════════════
+// SCREEN 9 — OFERTA / URGENCIA
+// ══════════════════════════════════════════════
+function initOffer(){
+  // Fecha dinámica: hoy + 3 días
+  const d = new Date();
+  d.setDate(d.getDate()+3);
+  const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  // 📅 MODIFICAR: cambia +3 por más o menos días si quieres diferente ventana de urgencia
+  document.getElementById('urgency-date').textContent =
+    dias[d.getDay()]+' '+d.getDate()+' de '+meses[d.getMonth()];
+}
+</script>
+</body>
+</html>
