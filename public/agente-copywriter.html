@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agente Copywriter — Embudo Gamificado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#030202;
+  --surface:#0a0604;
+  --red:#CC2200;
+  --red-lt:#FF4422;
+  --red-dim:rgba(204,34,0,0.15);
+  --red-dimmer:rgba(204,34,0,0.07);
+  --gold:#B8862A;
+  --gold-lt:#D4A843;
+  --white:#EDE8E0;
+  --dim:rgba(237,232,224,0.5);
+  --dimmer:rgba(237,232,224,0.22);
+  --mono:'JetBrains Mono',monospace;
+  --serif:'Libre Baskerville',serif;
+  --display:'Bebas Neue',sans-serif;
+}
+
+html,body{width:100%;min-height:100%;background:var(--bg);color:var(--white);font-family:var(--serif);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+
+/* GRAIN */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.7;animation:grain 0.35s steps(2) infinite;}
+@keyframes grain{0%{transform:translate(0,0)}50%{transform:translate(1px,-1px)}100%{transform:translate(-1px,1px)}}
+
+/* SCANLINES */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9998;}
+
+/* FILM STRIP */
+.strip-l,.strip-r{position:fixed;top:0;bottom:0;width:24px;background:#000;z-index:500;pointer-events:none;}
+.strip-l{left:0;border-right:1px solid rgba(204,34,0,0.12);}
+.strip-r{right:0;border-left:1px solid rgba(204,34,0,0.12);}
+.strip-l::before,.strip-r::before{content:'';position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:8px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 10px,rgba(204,34,0,0.12) 10px,rgba(204,34,0,0.12) 18px,transparent 18px,transparent 28px);}
+
+/* TOP BAR */
+.top-bar{position:fixed;top:0;left:24px;right:24px;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(3,2,2,0.9);border-bottom:1px solid rgba(204,34,0,0.15);z-index:600;backdrop-filter:blur(12px);}
+.top-bar-brand{font-family:var(--mono);font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--dimmer);}
+.top-bar-brand span{color:var(--red);}
+.top-bar-stage{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dimmer);}
+.top-bar-stage span{color:var(--gold-lt);}
+
+/* VIGNETTE */
+.vignette{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.7) 100%);pointer-events:none;z-index:10;}
+
+/* MAIN */
+.container{max-width:780px;margin:0 auto;padding:80px 44px 100px;}
+
+/* HEADER */
+.header{margin-bottom:56px;animation:rise 0.7s ease both;}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+.header-tag{font-family:var(--mono);font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--red);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.header-tag::after{content:'';flex:0 0 40px;height:1px;background:var(--red);opacity:0.4;}
+
+.header-title{font-family:var(--display);font-size:clamp(56px,11vw,88px);line-height:0.88;letter-spacing:1px;margin-bottom:6px;}
+.header-title .accent{color:var(--red);display:block;}
+
+.header-sub{font-size:15px;font-style:italic;color:var(--dim);line-height:1.7;margin-top:16px;max-width:520px;font-weight:400;}
+
+/* PROGRESS */
+.progress-track{display:flex;align-items:center;gap:0;margin-bottom:52px;}
+.prog-node{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.prog-circle{width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(204,34,0,0.2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--dimmer);transition:all 0.4s;}
+.prog-node.active .prog-circle{border-color:var(--red);color:var(--red);background:var(--red-dimmer);box-shadow:0 0 18px rgba(204,34,0,0.25);}
+.prog-node.done .prog-circle{border-color:var(--red);background:var(--red);color:#fff;}
+.prog-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dimmer);white-space:nowrap;transition:color 0.3s;}
+.prog-node.active .prog-label{color:var(--red);}
+.prog-node.done .prog-label{color:rgba(204,34,0,0.6);}
+.prog-line{flex:1;height:1px;background:rgba(204,34,0,0.12);min-width:16px;max-width:56px;transition:background 0.5s;}
+.prog-line.done{background:rgba(204,34,0,0.4);}
+
+/* PANEL */
+.panel{display:none;animation:rise 0.4s ease both;}
+.panel.active{display:block;}
+
+/* PANEL LABEL */
+.plabel{font-family:var(--mono);font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.plabel::before{content:'';width:16px;height:1px;background:var(--red);opacity:0.6;}
+
+.ptitle{font-family:var(--display);font-size:clamp(30px,6vw,46px);letter-spacing:1px;line-height:1;margin-bottom:10px;}
+.pdesc{font-size:14px;font-style:italic;color:var(--dim);line-height:1.7;margin-bottom:32px;}
+
+/* FORMS */
+.field{margin-bottom:22px;}
+.flabel{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:7px;display:block;opacity:0.9;}
+.fhint{font-size:12px;font-style:italic;color:var(--dimmer);margin-bottom:7px;line-height:1.5;}
+
+input[type=text],textarea,select{width:100%;background:rgba(204,34,0,0.03);border:1px solid rgba(204,34,0,0.18);color:var(--white);font-family:var(--serif);font-size:14px;padding:13px 15px;outline:none;transition:border-color 0.3s,background 0.3s;border-radius:0;-webkit-appearance:none;}
+input[type=text]:focus,textarea:focus{border-color:rgba(204,34,0,0.5);background:rgba(204,34,0,0.05);}
+input::placeholder,textarea::placeholder{color:var(--dimmer);font-style:italic;}
+textarea{resize:vertical;min-height:80px;line-height:1.6;}
+select option{background:#1a0a0a;}
+
+/* RADIO CARDS */
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rg.three{grid-template-columns:1fr 1fr 1fr;}
+.rc{border:1px solid rgba(204,34,0,0.15);padding:12px 13px;cursor:pointer;transition:all 0.2s;display:flex;align-items:flex-start;gap:10px;background:transparent;}
+.rc:hover{border-color:rgba(204,34,0,0.35);background:rgba(204,34,0,0.03);}
+.rc.sel{border-color:var(--red);background:rgba(204,34,0,0.07);}
+.rc input{display:none;}
+.rc-ico{font-size:18px;flex-shrink:0;margin-top:1px;}
+.rc-t{font-size:13px;font-weight:700;color:var(--white);margin-bottom:2px;}
+.rc-d{font-size:11px;color:var(--dimmer);line-height:1.4;}
+
+/* CHECKBOXES */
+.cl{display:flex;flex-direction:column;gap:7px;}
+.ci{display:flex;align-items:center;gap:11px;border:1px solid rgba(204,34,0,0.12);padding:10px 13px;cursor:pointer;transition:all 0.2s;}
+.ci:hover{border-color:rgba(204,34,0,0.3);}
+.ci.on{border-color:rgba(204,34,0,0.45);background:rgba(204,34,0,0.05);}
+.cb{width:17px;height:17px;border:1.5px solid rgba(204,34,0,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;transition:all 0.2s;}
+.ci.on .cb{background:var(--red);border-color:var(--red);color:#fff;}
+.ct{font-size:13px;color:var(--dim);}
+
+/* COPY PIECE SELECTOR */
+.copy-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+.copy-piece{border:1px solid rgba(204,34,0,0.15);padding:14px;cursor:pointer;transition:all 0.2s;position:relative;}
+.copy-piece:hover{border-color:rgba(204,34,0,0.35);}
+.copy-piece.sel{border-color:var(--red);background:rgba(204,34,0,0.07);}
+.copy-piece-num{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--red);opacity:0.6;margin-bottom:4px;}
+.copy-piece-title{font-size:13px;font-weight:700;color:var(--white);margin-bottom:4px;}
+.copy-piece-desc{font-size:11px;color:var(--dimmer);line-height:1.4;}
+.copy-piece-check{position:absolute;top:10px;right:10px;width:18px;height:18px;border:1.5px solid rgba(204,34,0,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all 0.2s;}
+.copy-piece.sel .copy-piece-check{background:var(--red);border-color:var(--red);color:#fff;}
+
+/* TONE SLIDER */
+.tone-track{display:flex;justify-content:space-between;margin-bottom:8px;}
+.tone-opt{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--dimmer);text-align:center;cursor:pointer;padding:6px 8px;border:1px solid transparent;transition:all 0.2s;flex:1;}
+.tone-opt:hover{color:var(--dim);}
+.tone-opt.sel{border-color:rgba(204,34,0,0.4);color:var(--red);background:var(--red-dimmer);}
+
+/* BUTTONS */
+.btn{width:100%;font-family:var(--display);font-size:20px;letter-spacing:2px;color:#fff;background:var(--red);border:none;padding:17px 32px;cursor:pointer;position:relative;overflow:hidden;transition:opacity 0.15s,transform 0.15s;margin-top:8px;}
+.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);pointer-events:none;}
+.btn:hover{opacity:0.88;}
+.btn:active{transform:scale(0.98);}
+.btn:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-ghost{background:transparent;border:1px solid rgba(204,34,0,0.25);color:var(--dimmer);font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;cursor:pointer;transition:all 0.2s;margin-top:8px;width:auto;}
+.btn-ghost:hover{border-color:var(--red);color:var(--white);}
+
+/* DIVIDER */
+hr{border:none;border-top:1px solid rgba(204,34,0,0.1);margin:28px 0;}
+
+/* LOADING */
+.loader{display:none;flex-direction:column;align-items:center;gap:14px;padding:48px 0;}
+.loader.show{display:flex;}
+.load-track{width:100%;height:2px;background:rgba(204,34,0,0.1);overflow:hidden;}
+.load-fill{height:100%;background:linear-gradient(90deg,#660000,var(--red),var(--red-lt));width:0%;transition:width 0.4s ease;box-shadow:0 0 10px var(--red);}
+.load-lbl{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--red);}
+.load-sub{font-size:13px;font-style:italic;color:var(--dimmer);}
+
+/* TERMINAL */
+.term{background:#000;border:1px solid rgba(204,34,0,0.2);padding:24px;margin-top:8px;min-height:180px;position:relative;overflow:hidden;display:none;}
+.term::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);}
+.term-hdr{display:flex;align-items:center;gap:7px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(204,34,0,0.1);}
+.tdot{width:9px;height:9px;border-radius:50%;}
+.tdot:nth-child(1){background:#ff5f57;}.tdot:nth-child(2){background:#febc2e;}.tdot:nth-child(3){background:#28c840;}
+.ttitle{font-family:var(--mono);font-size:10px;color:var(--dimmer);letter-spacing:2px;margin-left:auto;}
+.term-body{font-family:var(--mono);font-size:12px;line-height:1.9;color:rgba(237,232,224,0.8);white-space:pre-wrap;word-break:break-word;}
+.cur{display:inline-block;width:7px;height:13px;background:var(--red);vertical-align:middle;animation:cblink 0.8s step-end infinite;}
+@keyframes cblink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* OUTPUT */
+.copy-output{margin-top:8px;}
+
+/* PIECE CARD */
+.piece-card{margin-bottom:28px;border:1px solid rgba(204,34,0,0.18);position:relative;overflow:hidden;animation:rise 0.4s ease both;}
+.piece-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),transparent);}
+.piece-header{padding:16px 20px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(204,34,0,0.1);}
+.piece-header-left{}
+.piece-tag{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--red);opacity:0.7;margin-bottom:4px;}
+.piece-name{font-family:var(--display);font-size:22px;letter-spacing:1px;color:var(--white);}
+.piece-gatillo{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--dimmer);background:rgba(204,34,0,0.08);border:1px solid rgba(204,34,0,0.2);padding:4px 10px;white-space:nowrap;align-self:flex-start;}
+.piece-body{padding:16px 20px 20px;}
+.piece-body p{font-size:14px;color:var(--dim);line-height:1.75;margin-bottom:10px;font-weight:400;}
+.piece-body strong{color:var(--white);font-weight:700;}
+.piece-body em{color:var(--red-lt);font-style:italic;}
+
+/* COPY BLOCK */
+.copy-block{background:#000;border:1px solid rgba(204,34,0,0.15);padding:16px 18px;margin:12px 0;position:relative;}
+.copy-block-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--red);opacity:0.6;margin-bottom:10px;}
+.copy-block-text{font-family:var(--serif);font-size:14px;color:rgba(237,232,224,0.9);line-height:1.75;font-style:italic;}
+.copy-block-copy-btn{position:absolute;top:12px;right:12px;background:transparent;border:1px solid rgba(204,34,0,0.2);color:var(--dimmer);font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:4px 8px;cursor:pointer;transition:all 0.2s;}
+.copy-block-copy-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* TRIGGER BADGES */
+.triggers{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.trig{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border:1px solid rgba(204,34,0,0.25);color:rgba(204,34,0,0.8);}
+
+/* SUMMARY BOX */
+.summary-box{background:rgba(204,34,0,0.05);border:1px solid rgba(204,34,0,0.2);padding:24px;margin-bottom:28px;position:relative;}
+.summary-box::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--red);}
+.summary-title{font-family:var(--display);font-size:24px;letter-spacing:1px;color:var(--red-lt);margin-bottom:12px;}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.summary-item{}
+.summary-item-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dimmer);margin-bottom:3px;}
+.summary-item-val{font-size:13px;color:var(--dim);line-height:1.5;}
+
+/* RESULT CTA */
+.result-cta{background:linear-gradient(135deg,rgba(204,34,0,0.08),rgba(204,34,0,0.03));border:1px solid rgba(204,34,0,0.25);padding:28px;text-align:center;margin-top:32px;position:relative;overflow:hidden;}
+.result-cta::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);}
+.result-cta-title{font-family:var(--display);font-size:30px;letter-spacing:1px;margin-bottom:8px;}
+.result-cta-sub{font-size:13px;font-style:italic;color:var(--dim);margin-bottom:20px;line-height:1.6;}
+
+/* ERROR */
+.err{background:rgba(204,34,0,0.08);border:1px solid rgba(204,34,0,0.3);border-left:2px solid var(--red);padding:11px 15px;font-family:var(--mono);font-size:11px;color:#ff8070;margin-top:8px;display:none;}
+.err.show{display:block;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:2px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(204,34,0,0.3);}
+
+@media(max-width:600px){
+  .container{padding:70px 20px 80px;}
+  .rg,.copy-grid{grid-template-columns:1fr;}
+  .rg.three{grid-template-columns:1fr 1fr;}
+  .strip-l,.strip-r{width:14px;}
+  .summary-grid{grid-template-columns:1fr;}
+  .piece-header{flex-direction:column;gap:8px;}
+}
+</style>
+</head>
+<body>
+
+<div class="strip-l"></div>
+<div class="strip-r"></div>
+<div class="vignette"></div>
+
+<div class="top-bar">
+  <div class="top-bar-brand">EMBUDO <span>GAMIFICADO</span></div>
+  <div class="top-bar-stage">ETAPA <span>02</span></div>
+</div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-tag">Etapa 02</div>
+    <h1 class="header-title">AGENTE<br><span class="accent">COPYWRITER</span></h1>
+    <p class="header-sub">Genera la copy persuasiva de tu embudo gamificado usando los 12 gatillos mentales de mayor conversión validados por neurociencia</p>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-track" id="prog-track">
+    <div class="prog-node active" id="pn-0"><div class="prog-circle">01</div><div class="prog-label">Briefing</div></div>
+    <div class="prog-line" id="pl-0"></div>
+    <div class="prog-node" id="pn-1"><div class="prog-circle">02</div><div class="prog-label">Piezas</div></div>
+    <div class="prog-line" id="pl-1"></div>
+    <div class="prog-node" id="pn-2"><div class="prog-circle">03</div><div class="prog-label">Estilo</div></div>
+    <div class="prog-line" id="pl-2"></div>
+    <div class="prog-node" id="pn-3"><div class="prog-circle">04</div><div class="prog-label">Copy</div></div>
+  </div>
+
+  <!-- ══ PANEL 0: BRIEFING ══ -->
+  <div class="panel active" id="panel-0">
+    <div class="plabel">Paso 01 — Base</div>
+    <h2 class="ptitle">BRIEFING DEL EMBUDO</h2>
+    <p class="pdesc">El Agente necesita entender tu contexto para escribir copy que golpee exactamente donde duele.</p>
+
+    <div class="field">
+      <label class="flabel">Producto o servicio</label>
+      <input type="text" id="b-producto" placeholder="Ej: Sistema de Embudo Invertido™ para asesores inmobiliarios en Mérida">
+    </div>
+
+    <div class="field">
+      <label class="flabel">¿A quién le escribes? (avatar específico)</label>
+      <textarea id="b-avatar" placeholder="Ej: Asesor inmobiliario en Mérida, 30-50 años, con cartera activa pero dependiente de portales. Quiere crecer pero no sabe cómo usar redes. Frustrado porque invierte tiempo en contenido y no ve resultados."></textarea>
+    </div>
+
+    <div class="field">
+      <label class="flabel">Dolor más profundo del avatar</label>
+      <div class="fhint">El que más le quita el sueño. Cuanto más específico, mejor el copy.</div>
+      <input type="text" id="b-dolor" placeholder="Ej: Sube contenido durante semanas, nadie le escribe, mientras otros asesores menos capaces consiguen clientes solo por aparecer en redes">
+    </div>
+
+    <div class="field">
+      <label class="flabel">Transformación prometida</label>
+      <input type="text" id="b-transformacion" placeholder="Ej: De invisible en redes a referente de zona con 10-20 prospectos calificados llegando solos cada mes">
+    </div>
+
+    <div class="field">
+      <label class="flabel">¿Cuánto cuesta tu producto/servicio?</label>
+      <input type="text" id="b-precio" placeholder="Ej: $10,000 MXN/mes o $27,000 trimestral">
+    </div>
+
+    <div class="field">
+      <label class="flabel">¿Tienes resultados o prueba social? (opcional pero poderoso)</label>
+      <textarea id="b-prueba" placeholder="Ej: +$2M USD en ventas inmobiliarias generadas. 3 asesores en Mérida usando el sistema con resultados en menos de 45 días."></textarea>
+    </div>
+
+    <div class="field">
+      <label class="flabel">¿Qué hace diferente tu oferta de la competencia?</label>
+      <textarea id="b-diferenciador" placeholder="Ej: No es una agencia que te entrega contenido genérico. Es un sistema de embudo invertido: atraes primero, vendes después. Los prospectos llegan ya calientes, no tienes que perseguir a nadie."></textarea>
+    </div>
+
+    <div class="err" id="err-0">⚠ Completa los campos obligatorios para continuar</div>
+    <button class="btn" onclick="goP(1)">CONTINUAR → ELEGIR PIEZAS</button>
+  </div>
+
+  <!-- ══ PANEL 1: PIEZAS ══ -->
+  <div class="panel" id="panel-1">
+    <div class="plabel">Paso 02 — Selección</div>
+    <h2 class="ptitle">¿QUÉ PIEZAS NECESITAS?</h2>
+    <p class="pdesc">Selecciona las piezas de copy que quieres generar. Puedes elegir todas.</p>
+
+    <div class="copy-grid" id="piezas-grid">
+
+      <div class="copy-piece sel" onclick="togglePieza(this,'hook')">
+        <div class="copy-piece-check">✓</div>
+        <div class="copy-piece-num">PIEZA 01</div>
+        <div class="copy-piece-title">Hook de Realidad</div>
+        <div class="copy-piece-desc">La primera línea que detiene el scroll. El gancho que abre el embudo.</div>
+      </div>
+
+      <div class="copy-piece sel" onclick="togglePieza(this,'llamada')">
+        <div class="copy-piece-check">✓</div>
+        <div class="copy-piece-num">PIEZA 02</div>
+        <div class="copy-piece-title">Guión de Llamada</div>
+        <div class="copy-piece-desc">Lo que dice la voz cuando el usuario "contesta". Narración + historia.</div>
+      </div>
+
+      <div class="copy-piece sel" onclick="togglePieza(this,'encuesta')">
+        <div class="copy-piece-check">✓</div>
+        <div class="copy-piece-num">PIEZA 03</div>
+        <div class="copy-piece-title">Preguntas de Encuesta</div>
+        <div class="copy-piece-desc">3 preguntas que hacen que el avatar verbalice su propio dolor.</div>
+      </div>
+
+      <div class="copy-piece sel" onclick="togglePieza(this,'whatsapp')">
+        <div class="copy-piece-check">✓</div>
+        <div class="copy-piece-num">PIEZA 04</div>
+        <div class="copy-piece-title">Audios de WhatsApp</div>
+        <div class="copy-piece-desc">Guiones para los 3-5 audios del chat simulado. Mecanismo + credibilidad.</div>
+      </div>
+
+      <div class="copy-piece sel" onclick="togglePieza(this,'videollamada')">
+        <div class="copy-piece-check">✓</div>
+        <div class="copy-piece-num">PIEZA 05</div>
+        <div class="copy-piece-title">Guión de Videollamada</div>
+        <div class="copy-piece-desc">El pitch cara a cara. Lo que dices antes del CTA final.</div>
+      </div>
+
+      <div class="copy-piece sel" onclick="togglePieza(this,'oferta')">
+        <div class="copy-piece-check">✓</div>
+        <div class="copy-piece-num">PIEZA 06</div>
+        <div class="copy-piece-title">Copy de Oferta Final</div>
+        <div class="copy-piece-desc">Headline, stack de valor, precio, garantía, urgencia y CTA.</div>
+      </div>
+
+      <div class="copy-piece" onclick="togglePieza(this,'email')">
+        <div class="copy-piece-check"></div>
+        <div class="copy-piece-num">PIEZA 07</div>
+        <div class="copy-piece-title">Email / Follow-up</div>
+        <div class="copy-piece-desc">Para quienes no compraron. Secuencia de 2 emails de seguimiento.</div>
+      </div>
+
+      <div class="copy-piece" onclick="togglePieza(this,'stories')">
+        <div class="copy-piece-check"></div>
+        <div class="copy-piece-num">PIEZA 08</div>
+        <div class="copy-piece-title">CTAs de Stories</div>
+        <div class="copy-piece-desc">30 textos cortos de llamada a la acción para Instagram/Facebook Stories.</div>
+      </div>
+
+      <div class="copy-piece" onclick="togglePieza(this,'anuncio')">
+        <div class="copy-piece-check"></div>
+        <div class="copy-piece-num">PIEZA 09</div>
+        <div class="copy-piece-title">Copy de Anuncio</div>
+        <div class="copy-piece-desc">3 variantes de anuncio para Meta Ads que lleven al embudo.</div>
+      </div>
+
+      <div class="copy-piece" onclick="togglePieza(this,'tiktok')">
+        <div class="copy-piece-check"></div>
+        <div class="copy-piece-num">PIEZA 10</div>
+        <div class="copy-piece-title">Guiones TikTok</div>
+        <div class="copy-piece-desc">3 guiones de video para el feed simulado de TikTok.</div>
+      </div>
+
+    </div>
+
+    <div class="err" id="err-1">⚠ Selecciona al menos una pieza de copy</div>
+    <button class="btn" onclick="goP(2)">CONTINUAR → ESTILO DE VOZ</button>
+    <button class="btn-ghost" onclick="goP(0)">← Volver</button>
+  </div>
+
+  <!-- ══ PANEL 2: ESTILO ══ -->
+  <div class="panel" id="panel-2">
+    <div class="plabel">Paso 03 — Tu voz</div>
+    <h2 class="ptitle">ESTILO Y TONO</h2>
+    <p class="pdesc">El copy más efectivo suena exactamente como tú. Define tu voz antes de generar.</p>
+
+    <div class="field">
+      <label class="flabel">Tono de comunicación</label>
+      <div class="tone-track" id="tone-sel">
+        <div class="tone-opt sel" onclick="selTone(this,'directo')">DIRECTO<br><span style="font-size:8px;opacity:0.5">sin rodeos</span></div>
+        <div class="tone-opt" onclick="selTone(this,'conversacional')">CONVERS.<br><span style="font-size:8px;opacity:0.5">como amigo</span></div>
+        <div class="tone-opt" onclick="selTone(this,'misterioso')">MISTERIOSO<br><span style="font-size:8px;opacity:0.5">intriga</span></div>
+        <div class="tone-opt" onclick="selTone(this,'urgente')">URGENTE<br><span style="font-size:8px;opacity:0.5">presión real</span></div>
+        <div class="tone-opt" onclick="selTone(this,'premium')">PREMIUM<br><span style="font-size:8px;opacity:0.5">exclusivo</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="flabel">Longitud preferida del copy</label>
+      <div class="rg three" id="longitud-sel">
+        <label class="rc" onclick="selRC('longitud-sel',this,'corto')">
+          <div class="rc-ico">⚡</div>
+          <div><div class="rc-t">Corto e impactante</div><div class="rc-d">Cada palabra cuenta</div></div>
+        </label>
+        <label class="rc sel" onclick="selRC('longitud-sel',this,'medio')">
+          <div class="rc-ico">⚖️</div>
+          <div><div class="rc-t">Equilibrado</div><div class="rc-d">Completo pero ágil</div></div>
+        </label>
+        <label class="rc" onclick="selRC('longitud-sel',this,'largo')">
+          <div class="rc-ico">📜</div>
+          <div><div class="rc-t">Largo form</div><div class="rc-d">Cubre todas las objeciones</div></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="flabel">¿Qué frases o palabras NO deben aparecer en tu copy?</label>
+      <div class="fhint">Palabras que suenan genéricas, que usa la competencia, o que no van con tu marca.</div>
+      <input type="text" id="b-evitar" placeholder="Ej: 'potenciar', 'sinergia', 'disruptivo', 'revolucionario', 'haz crecer tu negocio'">
+    </div>
+
+    <div class="field">
+      <label class="flabel">¿Qué palabras SÍ van contigo?</label>
+      <input type="text" id="b-incluir" placeholder="Ej: 'referente', 'zona', 'sistema', 'embudo invertido', 'prospectos calificados', 'sin perseguir'">
+    </div>
+
+    <div class="field">
+      <label class="flabel">Objeciones principales a destruir en el copy</label>
+      <div class="cl" id="obj-list">
+        <div class="ci on" onclick="toggleCI(this)"><div class="cb">✓</div><div class="ct">"Es muy caro, no tengo presupuesto ahora"</div></div>
+        <div class="ci on" onclick="toggleCI(this)"><div class="cb">✓</div><div class="ct">"Ya pagué por marketing y no funcionó"</div></div>
+        <div class="ci on" onclick="toggleCI(this)"><div class="cb">✓</div><div class="ct">"No sé si funciona para mi zona / mercado"</div></div>
+        <div class="ci" onclick="toggleCI(this)"><div class="cb">✓</div><div class="ct">"No tengo tiempo para implementarlo"</div></div>
+        <div class="ci" onclick="toggleCI(this)"><div class="cb">✓</div><div class="ct">"No me gusta salir en cámara"</div></div>
+        <div class="ci" onclick="toggleCI(this)"><div class="cb">✓</div><div class="ct">"Necesito pensarlo más"</div></div>
+      </div>
+    </div>
+
+    <div class="err" id="err-2">⚠ Selecciona al menos un tono y longitud</div>
+    <button class="btn" onclick="generarCopy()">⚡ GENERAR COPY PERSUASIVA</button>
+    <button class="btn-ghost" onclick="goP(1)">← Volver</button>
+  </div>
+
+  <!-- ══ PANEL 3: RESULTADO ══ -->
+  <div class="panel" id="panel-3">
+    <div class="plabel">Paso 04 — Output</div>
+    <h2 class="ptitle">COPY <span style="color:var(--red)">GENERADA</span></h2>
+    <p class="pdesc">Piezas persuasivas con gatillos mentales validados, listas para implementar.</p>
+
+    <!-- LOADER -->
+    <div class="loader" id="loader">
+      <div style="width:100%"><div class="load-track"><div class="load-fill" id="load-fill"></div></div></div>
+      <div class="load-lbl" id="load-lbl">Analizando avatar...</div>
+      <div class="load-sub" id="load-sub">El Agente Copywriter está procesando tu briefing</div>
+    </div>
+
+    <!-- TERMINAL -->
+    <div class="term" id="term">
+      <div class="term-hdr">
+        <div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>
+        <div class="ttitle">AGENTE COPYWRITER · OUTPUT</div>
+      </div>
+      <div class="term-body" id="term-body"></div>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="copy-output" id="copy-output"></div>
+
+    <div class="err" id="err-api">⚠ Error de conexión. Inténtalo de nuevo.</div>
+
+    <div id="res-actions" style="display:none;margin-top:20px;">
+      <button class="btn" onclick="copiarTodo()">COPIAR TODA LA COPY</button>
+      <button class="btn-ghost" onclick="resetear()">← Generar nueva copy</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────────
+const S = {
+  producto:'',avatar:'',dolor:'',transformacion:'',
+  precio:'',prueba:'',diferenciador:'',
+  piezas:['hook','llamada','encuesta','whatsapp','videollamada','oferta'],
+  tono:'directo',longitud:'medio',evitar:'',incluir:'',objeciones:[]
+};
+let fullText = '';
+
+// ── NAV ──────────────────────────────────────────────────────────
+function goP(n){
+  if(n>0 && !validate(n-1)) return;
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===n));
+  for(let i=0;i<4;i++){
+    const pn=document.getElementById('pn-'+i);
+    if(i<n)pn.className='prog-node done';
+    else if(i===n)pn.className='prog-node active';
+    else pn.className='prog-node';
+    const pl=document.getElementById('pl-'+i);
+    if(pl)pl.className=i<n?'prog-line done':'prog-line';
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── VALIDATE ─────────────────────────────────────────────────────
+function validate(n){
+  const err=document.getElementById('err-'+n);
+  const show=()=>{err.classList.add('show');setTimeout(()=>err.classList.remove('show'),3500);return false;}
+  if(n===0){
+    S.producto=v('b-producto');S.avatar=v('b-avatar');S.dolor=v('b-dolor');
+    S.transformacion=v('b-transformacion');S.precio=v('b-precio');
+    S.prueba=v('b-prueba');S.diferenciador=v('b-diferenciador');
+    if(!S.producto||!S.avatar||!S.dolor||!S.transformacion||!S.precio) return show();
+  }
+  if(n===1){
+    S.piezas=Array.from(document.querySelectorAll('.copy-piece.sel')).map(el=>el.getAttribute('data-val')).filter(Boolean);
+    // rebuild from data-val or from known order
+    const allPiezas=[
+      {el:document.querySelectorAll('.copy-piece')[0],val:'hook'},
+      {el:document.querySelectorAll('.copy-piece')[1],val:'llamada'},
+      {el:document.querySelectorAll('.copy-piece')[2],val:'encuesta'},
+      {el:document.querySelectorAll('.copy-piece')[3],val:'whatsapp'},
+      {el:document.querySelectorAll('.copy-piece')[4],val:'videollamada'},
+      {el:document.querySelectorAll('.copy-piece')[5],val:'oferta'},
+      {el:document.querySelectorAll('.copy-piece')[6],val:'email'},
+      {el:document.querySelectorAll('.copy-piece')[7],val:'stories'},
+      {el:document.querySelectorAll('.copy-piece')[8],val:'anuncio'},
+      {el:document.querySelectorAll('.copy-piece')[9],val:'tiktok'},
+    ];
+    S.piezas=allPiezas.filter(p=>p.el&&p.el.classList.contains('sel')).map(p=>p.val);
+    if(S.piezas.length===0) return show();
+  }
+  if(n===2){
+    const tone=document.querySelector('#tone-sel .sel');
+    const lon=document.querySelector('#longitud-sel .sel');
+    if(!tone||!lon) return show();
+    S.tono=tone.textContent.split('\n')[0].trim().toLowerCase();
+    S.longitud=lon.querySelector('.rc-t').textContent.trim().toLowerCase();
+    S.evitar=v('b-evitar');S.incluir=v('b-incluir');
+    S.objeciones=Array.from(document.querySelectorAll('#obj-list .ci.on')).map(el=>el.querySelector('.ct').textContent);
+  }
+  return true;
+}
+
+function v(id){return document.getElementById(id)?.value.trim()||'';}
+
+// ── UI HELPERS ───────────────────────────────────────────────────
+function selRC(gid,el,val){
+  document.querySelectorAll('#'+gid+' .rc').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function toggleCI(el){el.classList.toggle('on');}
+function selTone(el,val){
+  document.querySelectorAll('#tone-sel .tone-opt').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function togglePieza(el,val){
+  el.classList.toggle('sel');
+  el.querySelector('.copy-piece-check').textContent = el.classList.contains('sel') ? '✓' : '';
+}
+
+// ── BUILD PROMPT ─────────────────────────────────────────────────
+const piezaNombres = {
+  hook:'HOOK DE REALIDAD',llamada:'GUIÓN DE LLAMADA ENTRANTE',
+  encuesta:'PREGUNTAS DE ENCUESTA GAMIFICADA',whatsapp:'GUIONES DE AUDIOS DE WHATSAPP',
+  videollamada:'GUIÓN DE VIDEOLLAMADA / PITCH FINAL',oferta:'COPY DE OFERTA FINAL (SALES PAGE)',
+  email:'SECUENCIA DE EMAILS DE FOLLOW-UP',stories:'CTAs DE STORIES (30 PIEZAS)',
+  anuncio:'COPY DE ANUNCIOS META ADS (3 VARIANTES)',tiktok:'GUIONES DE VIDEOS TIKTOK (3 GUIONES)'
+};
+
+function buildPrompt(){
+  const piezasList = S.piezas.map(p=>`- ${piezaNombres[p]||p}`).join('\n');
+  const objeList = S.objeciones.length>0 ? S.objeciones.join('\n- ') : 'No especificadas';
+
+  return `Eres el Agente Copywriter de "Embudos Gamificados". Eres un experto en psicología de ventas, neuromarketing y escritura persuasiva. Tu especialidad es copy que elimina la resistencia del prospecto usando los 12 gatillos mentales clásicos: urgencia, escasez, prueba social, autoridad, reciprocidad, compromiso, curiosidad, dolor, deseo, miedo a perder, identidad e historia.
+
+─── BRIEFING ───
+Producto: ${S.producto}
+Avatar: ${S.avatar}
+Dolor principal: ${S.dolor}
+Transformación prometida: ${S.transformacion}
+Precio: ${S.precio}
+Prueba social / resultados: ${S.prueba||'Ninguno especificado'}
+Diferenciador: ${S.diferenciador||'No especificado'}
+
+─── PARÁMETROS DE ESTILO ───
+Tono: ${S.tono}
+Longitud: ${S.longitud}
+Palabras a EVITAR: ${S.evitar||'Ninguna'}
+Palabras a INCLUIR: ${S.incluir||'Ninguna'}
+Objeciones a destruir:
+- ${objeList}
+
+─── PIEZAS A GENERAR ───
+${piezasList}
+
+─── INSTRUCCIONES ───
+Para CADA pieza solicitada, usa este formato EXACTO:
+
+## [NOMBRE DE LA PIEZA EN MAYÚSCULAS]
+**Gatillos activados:** [lista los gatillos mentales usados]
+**Función en el embudo:** [una línea explicando qué hace psicológicamente]
+
+[El copy completo, listo para usar, sin placeholders genéricos. Escribe copy REAL y específico para este producto/avatar, no ejemplos genéricos.]
+
+**Notas de implementación:** [cómo y cuándo usar esta pieza]
+
+---
+
+REGLAS CRÍTICAS:
+1. El copy debe sonar HUMANO, nunca robótico ni corporativo
+2. Usa el lenguaje exacto que usaría el avatar (no "potencia tu negocio" — sí "deja de perseguir clientes")
+3. Cada pieza debe estar 100% lista para copiar y pegar, sin [INSERTAR X AQUÍ]
+4. Usa las palabras a incluir naturalmente, evita las palabras prohibidas
+5. Para los guiones de audio/video, indica el tono de voz, ritmo y emociones al actuar
+6. Destruye las objeciones de forma sutil, sin mencionarlas directamente
+7. Responde en español, tono ${S.tono}, longitud ${S.longitud}
+
+Comienza directamente con la primera pieza. No escribas introducción.`;
+}
+
+// ── GENERATE ────────────────────────────────────────────────────
+async function generarCopy(){
+  if(!validate(2)) return;
+  goP(3);
+
+  const loader=document.getElementById('loader');
+  const term=document.getElementById('term');
+  const out=document.getElementById('copy-output');
+  const errApi=document.getElementById('err-api');
+  const resAct=document.getElementById('res-actions');
+
+  loader.classList.add('show');
+  term.style.display='none';
+  out.innerHTML='';
+  errApi.classList.remove('show');
+  resAct.style.display='none';
+  fullText='';
+
+  const steps=[
+    ['Analizando avatar y dolores...',12],
+    ['Activando gatillos mentales...',28],
+    ['Construyendo narrativa de persuasión...',44],
+    ['Escribiendo hooks y aperturas...',60],
+    ['Generando guiones y audios...',76],
+    ['Optimizando para conversión...',90],
+  ];
+  let si=0;
+  const lInt=setInterval(()=>{
+    if(si<steps.length){
+      document.getElementById('load-lbl').textContent=steps[si][0];
+      document.getElementById('load-fill').style.width=steps[si][1]+'%';
+      si++;
+    }
+  },800);
+
+  try{
+    const res=await fetch('/api/claude',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:6000,
+        stream:true,
+        messages:[{role:'user',content:buildPrompt()}]
+      })
+    });
+
+    if(!res.ok) throw new Error('API '+res.status);
+
+    clearInterval(lInt);
+    document.getElementById('load-fill').style.width='100%';
+    document.getElementById('load-lbl').textContent='Copy lista ✓';
+    await new Promise(r=>setTimeout(r,500));
+
+    loader.classList.remove('show');
+    term.style.display='block';
+    const tb=document.getElementById('term-body');
+    tb.innerHTML='';
+
+    const reader=res.body.getReader();
+    const dec=new TextDecoder();
+    let buf='';
+
+    while(true){
+      const {done,value}=await reader.read();
+      if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n');
+      buf=lines.pop();
+      for(const line of lines){
+        if(line.startsWith('data: ')){
+          const d=line.slice(6).trim();
+          if(d==='[DONE]') continue;
+          try{
+            const j=JSON.parse(d);
+            const delta=j.delta?.text||j.content?.[0]?.text||'';
+            if(delta){
+              fullText+=delta;
+              streamTerm(tb,fullText);
+            }
+          }catch(e){}
+        }
+      }
+    }
+
+    tb.innerHTML=tb.innerHTML.replace(/<span class="cur"><\/span>/g,'');
+    setTimeout(()=>{
+      renderCopy(fullText);
+      out.style.display='block';
+      term.style.display='none';
+      resAct.style.display='block';
+    },400);
+
+  }catch(e){
+    clearInterval(lInt);
+    loader.classList.remove('show');
+    errApi.classList.add('show');
+    errApi.textContent='⚠ '+(e.message||'Error de conexión');
+    console.error(e);
+  }
+}
+
+// ── STREAM TERMINAL ──────────────────────────────────────────────
+function streamTerm(el,text){
+  const h=text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/##\s(.+)/g,'<span style="color:#FF4422;font-weight:600">## $1</span>')
+    .replace(/\*\*(.+?)\*\*/g,'<span style="color:#EDE8E0">$1</span>');
+  el.innerHTML=h+'<span class="cur"></span>';
+  el.scrollTop=el.scrollHeight;
+}
+
+// ── RENDER STRUCTURED ────────────────────────────────────────────
+const gatilloColors={
+  urgencia:'rgba(255,68,34,0.7)',escasez:'rgba(255,100,50,0.7)',
+  'prueba social':'rgba(100,200,100,0.7)',autoridad:'rgba(200,160,60,0.7)',
+  curiosidad:'rgba(100,150,255,0.7)',dolor:'rgba(180,50,50,0.7)',
+  deseo:'rgba(200,100,200,0.7)',miedo:'rgba(150,80,80,0.7)',
+  identidad:'rgba(80,150,200,0.7)',historia:'rgba(160,120,80,0.7)',
+  reciprocidad:'rgba(80,180,160,0.7)',compromiso:'rgba(140,100,200,0.7)'
+};
+
+function renderCopy(text){
+  const out=document.getElementById('copy-output');
+  const sections=text.split(/^## /m).filter(Boolean);
+  let html='';
+
+  // Summary
+  html+=`
+  <div class="summary-box">
+    <div class="summary-title">COPY GENERADA</div>
+    <div class="summary-grid">
+      <div class="summary-item"><div class="summary-item-label">Producto</div><div class="summary-item-val">${S.producto}</div></div>
+      <div class="summary-item"><div class="summary-item-label">Piezas generadas</div><div class="summary-item-val">${sections.length} piezas de copy</div></div>
+      <div class="summary-item"><div class="summary-item-label">Tono</div><div class="summary-item-val">${S.tono} · ${S.longitud}</div></div>
+      <div class="summary-item"><div class="summary-item-label">Avatar</div><div class="summary-item-val">${S.avatar.substring(0,60)}...</div></div>
+    </div>
+  </div>`;
+
+  sections.forEach((sec,i)=>{
+    const lines=sec.trim().split('\n');
+    const title=lines[0].trim();
+    const body=lines.slice(1).join('\n').trim();
+
+    // Extract gatillos line
+    const gatillosMatch=body.match(/\*\*Gatillos activados:\*\*\s*(.+)/);
+    const gatillosRaw=gatillosMatch?gatillosMatch[1]:'';
+    const gatillosList=gatillosRaw.split(/[,·\|]/).map(g=>g.trim().toLowerCase()).filter(Boolean);
+
+    // Extract funcion
+    const funcMatch=body.match(/\*\*Función en el embudo:\*\*\s*(.+)/);
+    const funcion=funcMatch?funcMatch[1]:'';
+
+    // Extract notas
+    const notasMatch=body.match(/\*\*Notas de implementación:\*\*\s*([\s\S]+?)(?=\*\*|$)/);
+    const notas=notasMatch?notasMatch[1].trim():'';
+
+    // Get main copy (between funcion and notas)
+    let copyText=body
+      .replace(/\*\*Gatillos activados:\*\*.+/g,'')
+      .replace(/\*\*Función en el embudo:\*\*.+/g,'')
+      .replace(/\*\*Notas de implementación:\*\*[\s\S]+/g,'')
+      .replace(/---+/g,'')
+      .trim();
+
+    // Format copyText
+    const copyHtml=copyText
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/^#{1,3}\s(.+)/gm,'<div style="font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(204,34,0,0.7);margin:14px 0 6px">$1</div>')
+      .replace(/^>\s(.+)/gm,'<div style="border-left:2px solid var(--red);padding:8px 14px;margin:8px 0;font-style:italic;color:var(--white);background:rgba(204,34,0,0.04)">$1</div>')
+      .replace(/^-\s(.+)/gm,'<div style="display:flex;gap:8px;margin-bottom:5px"><span style="color:var(--red);flex-shrink:0">›</span><span>$1</span></div>')
+      .replace(/^(\d+)\.\s(.+)/gm,'<div style="display:flex;gap:10px;margin-bottom:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--red);flex-shrink:0;min-width:18px">$1.</span><span>$2</span></div>')
+      .replace(/\n\n/g,'</p><p style="margin-bottom:10px">')
+      .replace(/\n/g,'<br>');
+
+    // Gatillo tags HTML
+    const trigHtml=gatillosList.map(g=>{
+      const col=Object.keys(gatilloColors).find(k=>g.includes(k));
+      const color=col?gatilloColors[col]:'rgba(204,34,0,0.5)';
+      return `<div class="trig" style="border-color:${color};color:${color}">${g}</div>`;
+    }).join('');
+
+    html+=`
+    <div class="piece-card" style="animation-delay:${i*0.06}s">
+      <div class="piece-header">
+        <div class="piece-header-left">
+          <div class="piece-tag">Pieza ${String(i+1).padStart(2,'0')}</div>
+          <div class="piece-name">${title}</div>
+          ${funcion?`<div style="font-size:12px;font-style:italic;color:var(--dimmer);margin-top:5px">${funcion}</div>`:''}
+        </div>
+        ${gatillosList.length>0?`<div class="piece-gatillo">${gatillosList.length} gatillos</div>`:''}
+      </div>
+      <div class="piece-body">
+        <div class="copy-block">
+          <div class="copy-block-label">Copy lista para usar</div>
+          <button class="copy-block-copy-btn" onclick="copiarPieza(this)">COPIAR</button>
+          <div class="copy-block-text"><p style="margin-bottom:10px">${copyHtml}</p></div>
+        </div>
+        ${notas?`<div style="margin-top:10px;padding:10px 14px;background:rgba(0,0,0,0.3);border-left:2px solid rgba(204,34,0,0.3)"><div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--dimmer);margin-bottom:5px">IMPLEMENTACIÓN</div><div style="font-size:12px;color:var(--dimmer);font-style:italic;line-height:1.6">${notas}</div></div>`:''}
+        ${trigHtml?`<div class="triggers">${trigHtml}</div>`:''}
+      </div>
+    </div>`;
+  });
+
+  html+=`
+  <div class="result-cta">
+    <div class="result-cta-title">COPY LISTA 🎬</div>
+    <div class="result-cta-sub">
+      Tus piezas persuasivas están listas para implementar en el embudo gamificado.<br>
+      El siguiente paso: <strong>Agente Constructor</strong> — genera el prompt completo para construir el embudo.
+    </div>
+  </div>`;
+
+  out.innerHTML=html;
+}
+
+// ── COPY HELPERS ─────────────────────────────────────────────────
+function copiarPieza(btn){
+  const block=btn.closest('.copy-block').querySelector('.copy-block-text');
+  const text=block.innerText||block.textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent='✓ OK';
+    setTimeout(()=>btn.textContent=orig,1500);
+  });
+}
+
+function copiarTodo(){
+  if(!fullText){alert('No hay copy que copiar');return;}
+  navigator.clipboard.writeText(fullText).then(()=>{
+    const btn=event.target;
+    const orig=btn.textContent;
+    btn.textContent='✓ COPIADO AL PORTAPAPELES';
+    setTimeout(()=>btn.textContent=orig,2000);
+  });
+}
+
+function resetear(){
+  fullText='';
+  document.getElementById('copy-output').innerHTML='';
+  document.getElementById('term-body').innerHTML='';
+  ['b-producto','b-avatar','b-dolor','b-transformacion','b-precio','b-prueba','b-diferenciador','b-evitar','b-incluir']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  goP(0);
+}
+</script>
+</body>
+</html>
