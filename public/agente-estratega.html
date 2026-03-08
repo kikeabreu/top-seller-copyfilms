@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agente Estratega — Embudo Gamificado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --black:#000;
+  --bg:#050403;
+  --gold:#C9922A;
+  --gold-lt:#E8B84B;
+  --gold-dk:#7A5510;
+  --gold-dim:rgba(201,146,42,0.15);
+  --red:#CC2200;
+  --green:#00CC66;
+  --white:#F0EDE6;
+  --dim:rgba(240,237,230,0.45);
+  --dimmer:rgba(240,237,230,0.2);
+  --mono:'JetBrains Mono',monospace;
+  --serif:'Crimson Pro',serif;
+  --display:'Bebas Neue',sans-serif;
+}
+
+html,body{
+  width:100%;min-height:100%;
+  background:var(--bg);
+  color:var(--white);
+  font-family:var(--serif);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ── GRAIN ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.6;
+  animation:grain 0.4s steps(2) infinite;
+}
+@keyframes grain{
+  0%{transform:translate(0,0)}50%{transform:translate(-1px,1px)}100%{transform:translate(1px,-1px)}
+}
+
+/* ── FILM STRIP EDGES ── */
+.filmstrip-l,.filmstrip-r{
+  position:fixed;top:0;bottom:0;width:28px;
+  background:#000;z-index:500;pointer-events:none;
+}
+.filmstrip-l{left:0;border-right:1px solid rgba(201,146,42,0.1);}
+.filmstrip-r{right:0;border-left:1px solid rgba(201,146,42,0.1);}
+
+.filmstrip-l::before,.filmstrip-r::before{
+  content:'';position:absolute;top:0;bottom:0;left:50%;
+  transform:translateX(-50%);
+  width:10px;
+  background:repeating-linear-gradient(
+    to bottom,
+    transparent 0,transparent 8px,
+    rgba(201,146,42,0.15) 8px,rgba(201,146,42,0.15) 16px,
+    transparent 16px,transparent 24px
+  );
+}
+
+/* REC badge */
+.rec-badge{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:6px;
+  background:rgba(0,0,0,0.7);border:1px solid rgba(204,34,0,0.4);
+  padding:5px 14px;z-index:600;
+  font-family:var(--mono);font-size:11px;
+  color:var(--red);letter-spacing:3px;
+  backdrop-filter:blur(8px);
+}
+.rec-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--red);
+  animation:rec-blink 1.2s ease-in-out infinite;
+}
+@keyframes rec-blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+/* ── MAIN LAYOUT ── */
+.container{
+  max-width:760px;
+  margin:0 auto;
+  padding:80px 40px 80px;
+}
+
+/* ── HEADER ── */
+.header{
+  text-align:center;
+  margin-bottom:60px;
+  animation:fade-up 0.8s ease;
+}
+
+.header-eyebrow{
+  font-family:var(--mono);
+  font-size:10px;letter-spacing:5px;
+  text-transform:uppercase;color:var(--gold);
+  margin-bottom:16px;
+  display:flex;align-items:center;
+  justify-content:center;gap:12px;
+}
+.header-eyebrow::before,.header-eyebrow::after{
+  content:'';flex:1;max-width:60px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold-dk));
+}
+.header-eyebrow::after{
+  background:linear-gradient(90deg,var(--gold-dk),transparent);
+}
+
+.header-title{
+  font-family:var(--display);
+  font-size:clamp(52px,10vw,84px);
+  line-height:0.9;
+  letter-spacing:2px;
+  color:var(--white);
+  margin-bottom:8px;
+}
+.header-title .gold{
+  color:var(--gold);
+  display:block;
+}
+
+.header-sub{
+  font-size:16px;font-weight:300;font-style:italic;
+  color:var(--dim);margin-top:16px;
+  line-height:1.6;
+}
+
+/* ── PROGRESS STEPS ── */
+.steps-nav{
+  display:flex;align-items:center;
+  justify-content:center;
+  gap:0;margin-bottom:56px;
+}
+.step-dot{
+  display:flex;flex-direction:column;
+  align-items:center;gap:6px;
+  position:relative;
+}
+.step-dot-circle{
+  width:32px;height:32px;
+  border-radius:50%;
+  border:1.5px solid rgba(201,146,42,0.25);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:11px;
+  color:var(--dimmer);
+  transition:all 0.4s ease;
+  background:transparent;
+}
+.step-dot.active .step-dot-circle{
+  border-color:var(--gold);
+  color:var(--gold);
+  background:rgba(201,146,42,0.08);
+  box-shadow:0 0 16px rgba(201,146,42,0.2);
+}
+.step-dot.done .step-dot-circle{
+  border-color:var(--gold-dk);
+  background:var(--gold-dk);
+  color:var(--bg);
+}
+.step-dot-label{
+  font-family:var(--mono);font-size:9px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--dimmer);
+  white-space:nowrap;
+  transition:color 0.3s;
+}
+.step-dot.active .step-dot-label{color:var(--gold);}
+.step-dot.done .step-dot-label{color:var(--gold-dk);}
+
+.step-line{
+  flex:1;height:1px;
+  background:rgba(201,146,42,0.15);
+  min-width:20px;max-width:60px;
+  transition:background 0.5s ease;
+}
+.step-line.done{background:var(--gold-dk);}
+
+/* ── PANELS ── */
+.panel{
+  display:none;
+  animation:fade-up 0.5s ease;
+}
+.panel.active{display:block;}
+
+@keyframes fade-up{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Panel label */
+.panel-label{
+  font-family:var(--mono);font-size:10px;
+  letter-spacing:4px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+.panel-label::before{
+  content:'';display:block;
+  width:20px;height:1px;background:var(--gold);
+}
+
+.panel-title{
+  font-family:var(--display);
+  font-size:clamp(28px,6vw,44px);
+  letter-spacing:1px;
+  line-height:1;margin-bottom:10px;
+}
+
+.panel-desc{
+  font-size:15px;font-weight:300;
+  color:var(--dim);line-height:1.7;
+  margin-bottom:32px;
+  max-width:560px;
+}
+
+/* ── FORM ELEMENTS ── */
+.field{
+  margin-bottom:24px;
+}
+.field-label{
+  font-family:var(--mono);font-size:11px;
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:8px;
+  display:block;
+}
+.field-hint{
+  font-size:13px;font-style:italic;
+  color:var(--dimmer);margin-bottom:8px;
+  line-height:1.5;
+}
+
+input[type="text"],textarea,select{
+  width:100%;
+  background:rgba(201,146,42,0.04);
+  border:1px solid rgba(201,146,42,0.2);
+  color:var(--white);
+  font-family:var(--serif);font-size:15px;
+  padding:14px 16px;
+  outline:none;
+  transition:border-color 0.3s,background 0.3s;
+  border-radius:0;
+  -webkit-appearance:none;
+}
+input[type="text"]:focus,textarea:focus,select:focus{
+  border-color:rgba(201,146,42,0.6);
+  background:rgba(201,146,42,0.07);
+}
+input::placeholder,textarea::placeholder{
+  color:var(--dimmer);font-style:italic;
+}
+textarea{resize:vertical;min-height:90px;}
+select option{background:#1a1208;color:var(--white);}
+
+/* Radio cards */
+.radio-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+.radio-card{
+  border:1px solid rgba(201,146,42,0.18);
+  padding:12px 14px;cursor:pointer;
+  transition:all 0.2s ease;
+  display:flex;align-items:flex-start;gap:10px;
+  background:transparent;
+}
+.radio-card:hover{
+  border-color:rgba(201,146,42,0.4);
+  background:rgba(201,146,42,0.04);
+}
+.radio-card.selected{
+  border-color:var(--gold);
+  background:rgba(201,146,42,0.08);
+}
+.radio-card input{display:none;}
+.rc-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.rc-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:2px;}
+.rc-desc{font-size:12px;color:var(--dimmer);line-height:1.4;}
+
+/* Checkboxes */
+.check-list{display:flex;flex-direction:column;gap:8px;}
+.check-item{
+  display:flex;align-items:center;gap:12px;
+  border:1px solid rgba(201,146,42,0.15);
+  padding:11px 14px;cursor:pointer;
+  transition:all 0.2s;
+}
+.check-item:hover{border-color:rgba(201,146,42,0.35);}
+.check-item.checked{
+  border-color:rgba(201,146,42,0.5);
+  background:rgba(201,146,42,0.06);
+}
+.check-box{
+  width:18px;height:18px;
+  border:1.5px solid rgba(201,146,42,0.4);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:11px;
+  transition:all 0.2s;
+}
+.check-item.checked .check-box{
+  background:var(--gold);border-color:var(--gold);color:#000;
+}
+.check-text{font-size:14px;color:var(--dim);}
+
+/* ── BUTTONS ── */
+.btn-primary{
+  width:100%;
+  font-family:var(--display);font-size:20px;
+  letter-spacing:2px;
+  color:var(--bg);background:linear-gradient(135deg,var(--gold-dk),var(--gold),var(--gold-lt));
+  border:none;padding:18px 32px;cursor:pointer;
+  position:relative;overflow:hidden;
+  transition:transform 0.15s,opacity 0.15s;
+  margin-top:8px;
+}
+.btn-primary:hover{opacity:0.92;}
+.btn-primary:active{transform:scale(0.98);}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
+
+.btn-ghost{
+  background:transparent;
+  border:1px solid rgba(201,146,42,0.3);
+  color:var(--dim);font-family:var(--mono);
+  font-size:11px;letter-spacing:2px;
+  text-transform:uppercase;
+  padding:10px 20px;cursor:pointer;
+  transition:all 0.2s;
+  margin-top:8px;
+}
+.btn-ghost:hover{border-color:var(--gold);color:var(--white);}
+
+/* ── TERMINAL / STREAMING OUTPUT ── */
+.terminal{
+  background:#000;
+  border:1px solid rgba(201,146,42,0.2);
+  padding:24px;
+  margin-top:8px;
+  min-height:200px;
+  position:relative;
+  overflow:hidden;
+}
+.terminal::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+}
+
+.terminal-header{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:16px;
+  padding-bottom:12px;
+  border-bottom:1px solid rgba(201,146,42,0.1);
+}
+.t-dot{width:10px;height:10px;border-radius:50%;}
+.t-dot:nth-child(1){background:#ff5f57;}
+.t-dot:nth-child(2){background:#febc2e;}
+.t-dot:nth-child(3){background:#28c840;}
+.t-title{
+  font-family:var(--mono);font-size:11px;
+  color:var(--dimmer);letter-spacing:2px;
+  margin-left:auto;
+}
+
+.terminal-body{
+  font-family:var(--mono);font-size:13px;
+  line-height:1.8;color:rgba(240,237,230,0.8);
+  white-space:pre-wrap;word-break:break-word;
+}
+.terminal-body .gold{color:var(--gold-lt);}
+.terminal-body .red{color:#ff6b6b;}
+.terminal-body .green{color:#69db7c;}
+.terminal-body .dim{color:var(--dimmer);}
+
+.cursor-blink{
+  display:inline-block;width:8px;height:14px;
+  background:var(--gold);vertical-align:middle;
+  animation:cur-blink 0.8s step-end infinite;
+}
+@keyframes cur-blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── RESULTADO ARQUITECTURA ── */
+.arch-output{
+  margin-top:8px;
+}
+
+.arch-section{
+  margin-bottom:32px;
+  border-left:2px solid rgba(201,146,42,0.3);
+  padding-left:20px;
+  animation:fade-up 0.4s ease;
+}
+
+.arch-section-title{
+  font-family:var(--display);font-size:22px;
+  letter-spacing:1px;color:var(--gold-lt);
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:10px;
+}
+.arch-section-title span{
+  font-family:var(--mono);font-size:10px;
+  color:var(--dimmer);letter-spacing:2px;
+  text-transform:uppercase;
+}
+
+.arch-block{
+  background:rgba(201,146,42,0.04);
+  border:1px solid rgba(201,146,42,0.12);
+  padding:16px;margin-bottom:8px;
+}
+
+.arch-block-title{
+  font-size:14px;font-weight:600;
+  color:var(--white);margin-bottom:4px;
+  display:flex;align-items:center;gap:8px;
+}
+.arch-block-num{
+  font-family:var(--mono);font-size:10px;
+  color:var(--gold);opacity:0.6;
+}
+.arch-block-body{
+  font-size:13px;color:var(--dim);
+  line-height:1.6;font-weight:300;
+}
+
+/* Tabla de dolores */
+.pain-table{width:100%;border-collapse:collapse;margin-bottom:8px;}
+.pain-table th{
+  font-family:var(--mono);font-size:10px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--gold);padding:8px 12px;
+  border-bottom:1px solid rgba(201,146,42,0.2);
+  text-align:left;font-weight:400;
+}
+.pain-table td{
+  font-size:13px;color:var(--dim);
+  padding:10px 12px;
+  border-bottom:1px solid rgba(240,237,230,0.04);
+  vertical-align:top;line-height:1.5;
+}
+.pain-table tr:hover td{background:rgba(201,146,42,0.03);}
+
+/* CTA final del resultado */
+.result-cta{
+  background:rgba(201,146,42,0.06);
+  border:1px solid rgba(201,146,42,0.25);
+  padding:24px;text-align:center;
+  margin-top:32px;
+  position:relative;overflow:hidden;
+}
+.result-cta::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+}
+.result-cta-title{
+  font-family:var(--display);font-size:28px;
+  letter-spacing:1px;margin-bottom:8px;
+}
+.result-cta-sub{
+  font-size:14px;color:var(--dim);
+  margin-bottom:20px;line-height:1.6;
+}
+
+/* Loading spinner */
+.loading-wrap{
+  display:none;flex-direction:column;
+  align-items:center;gap:16px;
+  padding:40px 0;text-align:center;
+}
+.loading-wrap.show{display:flex;}
+
+.loading-bar-track{
+  width:100%;height:2px;
+  background:rgba(201,146,42,0.1);
+  position:relative;overflow:hidden;
+}
+.loading-bar-fill{
+  height:100%;background:linear-gradient(90deg,var(--gold-dk),var(--gold),var(--gold-lt));
+  width:0%;transition:width 0.3s ease;
+  box-shadow:0 0 8px var(--gold);
+}
+.loading-label{
+  font-family:var(--mono);font-size:11px;
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);
+}
+.loading-status{
+  font-size:13px;font-style:italic;
+  color:var(--dimmer);
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(201,146,42,0.3);border-radius:2px;}
+
+/* ── ERROR ── */
+.error-msg{
+  background:rgba(204,34,0,0.08);
+  border:1px solid rgba(204,34,0,0.3);
+  border-left:3px solid var(--red);
+  padding:12px 16px;
+  font-family:var(--mono);font-size:12px;
+  color:#ff8070;margin-top:8px;
+  display:none;
+}
+.error-msg.show{display:block;}
+
+/* Divider */
+.divider{
+  border:none;border-top:1px solid rgba(201,146,42,0.1);
+  margin:32px 0;
+}
+
+/* Sticky bottom bar en móvil */
+@media(max-width:600px){
+  .container{padding:70px 20px 60px;}
+  .radio-grid{grid-template-columns:1fr;}
+  .filmstrip-l,.filmstrip-r{width:16px;}
+}
+</style>
+</head>
+<body>
+
+<div class="filmstrip-l"></div>
+<div class="filmstrip-r"></div>
+<div class="rec-badge"><div class="rec-dot"></div> REC</div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-eyebrow">Etapa 01</div>
+    <h1 class="header-title">
+      AGENTE
+      <span class="gold">ESTRATEGA</span>
+    </h1>
+    <p class="header-sub">Analiza tu nicho y planifica la arquitectura de tu embudo gamificado con base en neurociencia del comportamiento</p>
+  </div>
+
+  <!-- STEP NAV -->
+  <div class="steps-nav" id="steps-nav">
+    <div class="step-dot active" id="sdot-0">
+      <div class="step-dot-circle">01</div>
+      <div class="step-dot-label">Producto</div>
+    </div>
+    <div class="step-line" id="sline-0"></div>
+    <div class="step-dot" id="sdot-1">
+      <div class="step-dot-circle">02</div>
+      <div class="step-dot-label">Avatar</div>
+    </div>
+    <div class="step-line" id="sline-1"></div>
+    <div class="step-dot" id="sdot-2">
+      <div class="step-dot-circle">03</div>
+      <div class="step-dot-label">Contexto</div>
+    </div>
+    <div class="step-line" id="sline-2"></div>
+    <div class="step-dot" id="sdot-3">
+      <div class="step-dot-circle">04</div>
+      <div class="step-dot-label">Arquitectura</div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL 0: PRODUCTO ═══ -->
+  <div class="panel active" id="panel-0">
+    <div class="panel-label">Paso 01 — Tu oferta</div>
+    <h2 class="panel-title">¿QUÉ VENDES?</h2>
+    <p class="panel-desc">El Agente Estratega necesita entender tu oferta para diseñar el embudo que maximice conversiones.</p>
+
+    <div class="field">
+      <label class="field-label">Nombre de tu producto o servicio</label>
+      <input type="text" id="f-nombre" placeholder="Ej: Sistema de Embudo Invertido™ para inmobiliarios">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Tipo de oferta</label>
+      <div class="radio-grid" id="tipo-oferta">
+        <label class="radio-card" onclick="selectRadio('tipo-oferta',this,'servicio')">
+          <input type="radio" name="tipo" value="servicio">
+          <div class="rc-icon">🎯</div>
+          <div><div class="rc-title">Servicio Done-For-You</div><div class="rc-desc">Haces el trabajo por el cliente</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('tipo-oferta',this,'infoproducto')">
+          <input type="radio" name="tipo" value="infoproducto">
+          <div class="rc-icon">📚</div>
+          <div><div class="rc-title">Infoproducto / Curso</div><div class="rc-desc">El cliente aprende a hacerlo</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('tipo-oferta',this,'inmueble')">
+          <input type="radio" name="tipo" value="inmueble">
+          <div class="rc-icon">🏡</div>
+          <div><div class="rc-title">Bien inmobiliario</div><div class="rc-desc">Venta o renta de propiedad</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('tipo-oferta',this,'consultoria')">
+          <input type="radio" name="tipo" value="consultoria">
+          <div class="rc-icon">🧠</div>
+          <div><div class="rc-title">Consultoría / Coaching</div><div class="rc-desc">Acompañamiento personalizado</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('tipo-oferta',this,'software')">
+          <input type="radio" name="tipo" value="software">
+          <div class="rc-icon">⚙️</div>
+          <div><div class="rc-title">Software / SaaS</div><div class="rc-desc">Herramienta digital</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('tipo-oferta',this,'otro')">
+          <input type="radio" name="tipo" value="otro">
+          <div class="rc-icon">✦</div>
+          <div><div class="rc-title">Otro</div><div class="rc-desc">Descríbelo tú mismo</div></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">¿Cuál es la promesa principal? (la transformación que ofreces)</label>
+      <div class="field-hint">Completa: "Ayudo a [quién] a lograr [qué resultado] en [cuánto tiempo] sin [obstáculo principal]"</div>
+      <textarea id="f-promesa" placeholder="Ej: Ayudo a brokers inmobiliarios en Mérida a generar 10-20 prospectos calificados al mes desde redes sin depender de portales ni referidos"></textarea>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Precio aproximado</label>
+      <div class="radio-grid" id="precio-rango" style="grid-template-columns:1fr 1fr 1fr;">
+        <label class="radio-card" onclick="selectRadio('precio-rango',this,'bajo')">
+          <div class="rc-icon">💰</div>
+          <div><div class="rc-title">$50–$500</div><div class="rc-desc">Accesible / digital</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('precio-rango',this,'medio')">
+          <div class="rc-icon">💎</div>
+          <div><div class="rc-title">$500–$5k</div><div class="rc-desc">Ticket medio</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('precio-rango',this,'alto')">
+          <div class="rc-icon">🏆</div>
+          <div><div class="rc-title">$5k+</div><div class="rc-desc">High ticket / premium</div></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="error-msg" id="err-0">⚠ Completa todos los campos antes de continuar</div>
+    <button class="btn-primary" onclick="goPanel(1)">CONTINUAR → DEFINIR AVATAR</button>
+  </div>
+
+  <!-- ═══ PANEL 1: AVATAR ═══ -->
+  <div class="panel" id="panel-1">
+    <div class="panel-label">Paso 02 — Tu cliente ideal</div>
+    <h2 class="panel-title">¿A QUIÉN LE VENDES?</h2>
+    <p class="panel-desc">La neurociencia del embudo empieza aquí. El cerebro compra cuando se siente completamente entendido.</p>
+
+    <div class="field">
+      <label class="field-label">Describe a tu cliente ideal</label>
+      <div class="field-hint">Cargo, industria, ciudad, situación actual</div>
+      <textarea id="f-avatar" placeholder="Ej: Broker o asesor inmobiliario en Mérida, 30-50 años, con al menos 1 año vendiendo. Actualmente depende de portales y referidos. Tiene presencia en redes pero no sabe qué publicar. Quiere crecer pero no tiene tiempo ni sistema."></textarea>
+    </div>
+
+    <div class="field">
+      <label class="field-label">¿Cuáles son sus 3 dolores más profundos?</label>
+      <div class="field-hint">Los dolores que le quitan el sueño. Sé específico y emocional.</div>
+      <input type="text" id="f-dolor1" placeholder="Dolor 1: Ej: Leads de portales que piden precio y desaparecen" style="margin-bottom:8px">
+      <input type="text" id="f-dolor2" placeholder="Dolor 2: Ej: Invisible en redes, compitiendo contra 15 iguales" style="margin-bottom:8px">
+      <input type="text" id="f-dolor3" placeholder="Dolor 3: Ej: Depende de referidos que llegan cuando quieren">
+    </div>
+
+    <div class="field">
+      <label class="field-label">¿Cuál es su mayor deseo / sueño?</label>
+      <textarea id="f-deseo" placeholder="Ej: Ser el referente de su zona, que los clientes lo busquen a él, tener un flujo constante y predecible de prospectos calificados sin perseguir a nadie"></textarea>
+    </div>
+
+    <div class="field">
+      <label class="field-label">¿Qué objeciones tiene para no comprar? (elige las más comunes)</label>
+      <div class="check-list" id="objeciones-list">
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">"Es muy caro / no tengo presupuesto"</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">"Ya pagué por marketing y no funcionó"</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">"No tengo tiempo para esto ahora"</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">"No sé si funciona para mi nicho / zona"</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">"Necesito pensarlo / consultarlo"</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">"No me gusta aparecer en cámara / redes"</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="err-1">⚠ Completa los campos obligatorios</div>
+    <button class="btn-primary" onclick="goPanel(2)">CONTINUAR → CONTEXTO DEL EMBUDO</button>
+    <button class="btn-ghost" onclick="goPanel(0)">← Volver</button>
+  </div>
+
+  <!-- ═══ PANEL 2: CONTEXTO ═══ -->
+  <div class="panel" id="panel-2">
+    <div class="panel-label">Paso 03 — El embudo</div>
+    <h2 class="panel-title">¿CÓMO QUIERES CAPTURAR?</h2>
+    <p class="panel-desc">Define el contexto de distribución y el estilo de experiencia que quieres crear.</p>
+
+    <div class="field">
+      <label class="field-label">¿Dónde conseguirás el tráfico para este embudo?</label>
+      <div class="check-list" id="trafico-list">
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">Facebook / Instagram Ads</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">TikTok Ads / contenido orgánico</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">Google Ads / YouTube</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">Orgánico (posts, reels, stories)</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <div class="check-text">Email / WhatsApp / base existente</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">¿Qué tipo de experiencia inmersiva quieres crear?</label>
+      <div class="radio-grid" id="tipo-exp">
+        <label class="radio-card" onclick="selectRadio('tipo-exp',this,'llamada')">
+          <div class="rc-icon">📞</div>
+          <div><div class="rc-title">Llamada entrante</div><div class="rc-desc">Como CopyFilms — el usuario "contesta"</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('tipo-exp',this,'whatsapp')">
+          <div class="rc-icon">💬</div>
+          <div><div class="rc-title">Conversación WhatsApp</div><div class="rc-desc">Mensajes + audios como chat real</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('tipo-exp',this,'tiktok')">
+          <div class="rc-icon">🎬</div>
+          <div><div class="rc-title">Feed de TikTok</div><div class="rc-desc">Videos con prueba social nativa</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('tipo-exp',this,'combinado')">
+          <div class="rc-icon">🔀</div>
+          <div><div class="rc-title">Combinado (recomendado)</div><div class="rc-desc">Múltiples apps en secuencia</div></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">¿Tienes videos o audios disponibles para grabar?</label>
+      <div class="radio-grid" id="media-status" style="grid-template-columns:1fr 1fr 1fr;">
+        <label class="radio-card" onclick="selectRadio('media-status',this,'tengo')">
+          <div class="rc-icon">✅</div>
+          <div><div class="rc-title">Sí tengo</div><div class="rc-desc">Listo para producir</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('media-status',this,'voy')">
+          <div class="rc-icon">🎥</div>
+          <div><div class="rc-title">Los grabaré</div><div class="rc-desc">Necesito el guión</div></div>
+        </label>
+        <label class="radio-card" onclick="selectRadio('media-status',this,'ia')">
+          <div class="rc-icon">🤖</div>
+          <div><div class="rc-title">Solo con IA</div><div class="rc-desc">Avatar virtual, sin cámara</div></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">¿Algo más que el Agente deba saber? (opcional)</label>
+      <textarea id="f-extra" placeholder="Contexto adicional: zona geográfica específica, restricciones, competidores, tono de marca, etc."></textarea>
+    </div>
+
+    <div class="error-msg" id="err-2">⚠ Completa los campos obligatorios</div>
+    <button class="btn-primary" onclick="generarArquitectura()">⚡ GENERAR ARQUITECTURA DEL EMBUDO</button>
+    <button class="btn-ghost" onclick="goPanel(1)">← Volver</button>
+  </div>
+
+  <!-- ═══ PANEL 3: RESULTADO ═══ -->
+  <div class="panel" id="panel-3">
+    <div class="panel-label">Paso 04 — Tu plan</div>
+    <h2 class="panel-title">ARQUITECTURA <span style="color:var(--gold)">GENERADA</span></h2>
+    <p class="panel-desc">Tu embudo gamificado diseñado con neurociencia del comportamiento.</p>
+
+    <!-- Loading -->
+    <div class="loading-wrap" id="loading">
+      <div style="width:100%">
+        <div class="loading-bar-track">
+          <div class="loading-bar-fill" id="loading-fill"></div>
+        </div>
+      </div>
+      <div class="loading-label" id="loading-label">Analizando nicho...</div>
+      <div class="loading-status" id="loading-status">El Agente Estratega está procesando tu información</div>
+    </div>
+
+    <!-- Terminal streaming -->
+    <div class="terminal" id="terminal" style="display:none">
+      <div class="terminal-header">
+        <div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div>
+        <div class="t-title">AGENTE ESTRATEGA · OUTPUT</div>
+      </div>
+      <div class="terminal-body" id="terminal-body"></div>
+    </div>
+
+    <!-- Arquitectura estructurada -->
+    <div class="arch-output" id="arch-output" style="display:none"></div>
+
+    <div class="error-msg" id="err-api">⚠ Error de conexión. Verifica tu API key e inténtalo de nuevo.</div>
+
+    <div id="result-actions" style="display:none;margin-top:24px;">
+      <button class="btn-primary" onclick="copiarResultado()">COPIAR ARQUITECTURA COMPLETA</button>
+      <button class="btn-ghost" onclick="reiniciar()">← Generar otro embudo</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ── STATE ────────────────────────────────
+const state = {
+  nombre:'', tipo:'', promesa:'', precio:'',
+  avatar:'', dolor1:'', dolor2:'', dolor3:'',
+  deseo:'', objeciones:[],
+  trafico:[], tipoExp:'', media:'', extra:''
+};
+
+let fullResultText = '';
+
+// ── NAVIGATION ──────────────────────────
+function goPanel(n){
+  if(n > 0 && !validatePanel(n-1)) return;
+
+  document.querySelectorAll('.panel').forEach((p,i)=>{
+    p.classList.toggle('active', i===n);
+  });
+
+  for(let i=0;i<4;i++){
+    const dot = document.getElementById('sdot-'+i);
+    if(i < n) { dot.className='step-dot done'; }
+    else if(i===n) { dot.className='step-dot active'; }
+    else { dot.className='step-dot'; }
+
+    const line = document.getElementById('sline-'+i);
+    if(line) line.className = i < n ? 'step-line done' : 'step-line';
+  }
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── VALIDATION ──────────────────────────
+function validatePanel(n){
+  const err = document.getElementById('err-'+n);
+
+  if(n===0){
+    const nombre = document.getElementById('f-nombre').value.trim();
+    const promesa = document.getElementById('f-promesa').value.trim();
+    const tipo = document.querySelector('#tipo-oferta .selected');
+    const precio = document.querySelector('#precio-rango .selected');
+    if(!nombre || !promesa || !tipo || !precio){
+      err.classList.add('show');
+      setTimeout(()=>err.classList.remove('show'),3000);
+      return false;
+    }
+    state.nombre=nombre; state.promesa=promesa;
+    state.tipo=tipo.querySelector('input').value;
+    state.precio=precio.querySelector('.rc-title').textContent;
+  }
+
+  if(n===1){
+    const avatar = document.getElementById('f-avatar').value.trim();
+    const d1 = document.getElementById('f-dolor1').value.trim();
+    const d2 = document.getElementById('f-dolor2').value.trim();
+    const deseo = document.getElementById('f-deseo').value.trim();
+    if(!avatar || !d1 || !d2 || !deseo){
+      err.classList.add('show');
+      setTimeout(()=>err.classList.remove('show'),3000);
+      return false;
+    }
+    state.avatar=avatar; state.dolor1=d1;
+    state.dolor2=d2; state.dolor3=document.getElementById('f-dolor3').value.trim();
+    state.deseo=deseo;
+    state.objeciones=Array.from(document.querySelectorAll('#objeciones-list .checked'))
+      .map(el=>el.querySelector('.check-text').textContent);
+  }
+
+  if(n===2){
+    const tipoExp = document.querySelector('#tipo-exp .selected');
+    const media = document.querySelector('#media-status .selected');
+    if(!tipoExp || !media){
+      err.classList.add('show');
+      setTimeout(()=>err.classList.remove('show'),3000);
+      return false;
+    }
+    state.tipoExp=tipoExp.querySelector('.rc-title').textContent;
+    state.media=media.querySelector('.rc-title').textContent;
+    state.trafico=Array.from(document.querySelectorAll('#trafico-list .checked'))
+      .map(el=>el.querySelector('.check-text').textContent);
+    state.extra=document.getElementById('f-extra').value.trim();
+  }
+
+  return true;
+}
+
+// ── UI HELPERS ──────────────────────────
+function selectRadio(groupId, el, val){
+  document.querySelectorAll('#'+groupId+' .radio-card')
+    .forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function toggleCheck(el){
+  el.classList.toggle('checked');
+}
+
+// ── BUILD PROMPT ────────────────────────
+function buildPrompt(){
+  return `Eres el arquitecto de embudos gamificados más avanzado del mundo hispanohablante. Tu especialidad es diseñar embudos que NO parecen embudos — experiencias inmersivas que simulan apps reales (WhatsApp, llamadas entrantes, TikTok, videollamadas) para que el prospecto baje TODA su guardia comercial antes de recibir la oferta.
+
+Tu referencia máxima es el embudo de CopyFilms.online, que sigue esta secuencia cinematográfica:
+1. Video fullscreen hombre frente a fogata sosteniendo teléfono → llama la atención sin contexto
+2. UI de llamada entrante (no contesta = re-llama en 2.5s con mensaje nuevo) → micro-compromiso físico
+3. Historia narrada con música tenebrosa sobre el dolor del avatar → VSL disfrazado
+4. "Debo verificar que eres confiable" + cuelga → FOMO + escasez de acceso
+5. Terminal tipo hacker procesando perfil → validación psicológica
+6. Encuesta 3 preguntas opción múltiple → el prospecto DICE su dolor en voz alta
+7. Loading bar analizando respuestas → anticipación
+8. Notificación de WhatsApp en pantalla bloqueada → rompe el 4to muro
+9. Chat de WhatsApp con audios secuenciales → VSL conversacional sin resistencia
+10. "Llámame" → marcador de teléfono real con número pre-llenado → compromiso físico máximo
+11. Tono, contesta personaje → da usuario/contraseña de TikTok secreto
+12. Login TikTok pre-llenado → acceso exclusivo gamificado
+13. Feed de TikTok falso con video + prueba social (comentarios) → conversión sin sentir venta
+14. Videollamada de WhatsApp → pitch final cara a cara
+15. Botón CTA dentro de la videollamada → acción en momento de máxima emoción
+16. Sales page con fecha real dinámica (JS detecta fecha de hoy) → urgencia real
+
+PRINCIPIOS MAESTROS que debes aplicar siempre:
+- Cada pantalla simula una app que el avatar usa a diario → confianza automática
+- Cada acción es elegida por el usuario (contestar, marcar, reproducir) → compromiso escalado
+- El prospecto NUNCA siente que le están vendiendo hasta el paso 14+
+- El cuestionario hace que el prospecto se venda a sí mismo al verbalizar su dolor
+- Los personajes crean relaciones emocionales distintas: autoridad + cómplice + prueba social
+- La urgencia usa datos REALES (fecha actual de JS, zonas geográficas reales, números de spots)
+
+PROHIBICIONES ABSOLUTAS — NUNCA hagas esto:
+✗ "Hola, soy [nombre]" — siempre usa el nombre real del vendedor
+✗ "Obtén acceso exclusivo" — copy genérico de low-conversion
+✗ "Descuento por 24 horas" — urgencia falsa y predecible
+✗ Zoom como primera app — no es una app que use el avatar a diario
+✗ Estadísticas genéricas ("80% busca en línea") — usa datos del nicho específico
+✗ Cualquier copy que suene a anuncio o pitch de ventas antes del paso 12
+✗ Respuestas de cuestionario que no reflejen el lenguaje exacto del avatar
+
+─── DATOS DEL EMBUDO A DISEÑAR ───
+
+PRODUCTO: ${state.nombre}
+TIPO: ${state.tipo}
+PROMESA: ${state.promesa}
+PRECIO: ${state.precio}
+
+AVATAR: ${state.avatar}
+DOLOR 1: ${state.dolor1}
+DOLOR 2: ${state.dolor2}
+DOLOR 3: ${state.dolor3 || 'No especificado'}
+DESEO: ${state.deseo}
+OBJECIONES: ${state.objeciones.length > 0 ? state.objeciones.join(' | ') : 'No especificadas'}
+
+TRÁFICO: ${state.trafico.length > 0 ? state.trafico.join(', ') : 'Por definir'}
+TIPO DE EXPERIENCIA: ${state.tipoExp}
+MEDIA DISPONIBLE: ${state.media}
+CONTEXTO: ${state.extra || 'Ninguno'}
+
+─── GENERA LA ARQUITECTURA COMPLETA ───
+
+Usa EXACTAMENTE estos títulos de sección. Sin introducción, sin cierre, directo a la arquitectura:
+
+## DIAGNÓSTICO DEL NICHO
+El estado mental EXACTO del avatar en el momento en que llegará a este embudo. No el dolor genérico — el pensamiento específico que tiene a las 11pm cuando no puede dormir. Su miedo más íntimo (no el que diría en público). El disparador emocional exacto que lo hará detenerse en el gancho. El momento de su semana cuando está más receptivo a esta solución.
+
+## GANCHO DE REALIDAD
+Describe con precisión cinematográfica:
+- Qué ve el usuario en los primeros 3 segundos (imagen, texto, sonido)
+- Qué app o interfaz simula (tiene que ser una que el avatar use todos los días)
+- El copy EXACTO palabra por palabra del gancho — no el concepto, las palabras reales
+- Por qué este gancho específico detiene el scroll de ESTE avatar (no de cualquiera)
+- Qué emoción activa antes de que haya contexto
+
+## SECUENCIA DE MICRO-COMPROMISOS
+Mínimo 8 pasos. Para cada paso:
+**Paso N — [NOMBRE DEL PASO]**
+- App/interfaz simulada: [app real que el avatar conoce]
+- Lo que ve/escucha exactamente: [descripción visual detallada]
+- Copy o guión word-for-word: [texto o diálogo exacto, no resumen]
+- Acción que debe realizar: [qué hace físicamente el usuario]
+- Gatillo mental: [cuál y por qué funciona aquí]
+- Función psicológica: [qué está pasando en el cerebro del prospecto]
+
+## PREGUNTAS DEL CUESTIONARIO
+3 preguntas que hacen que el avatar ESCUCHE SU PROPIO DOLOR. Las respuestas deben usar el lenguaje coloquial exacto del avatar (no lenguaje de marketing). Cada opción debe resonar tanto que el avatar piense "¿cómo saben esto?".
+
+Formato:
+**PREGUNTA N:** [pregunta que activa el dolor]
+- Opción A: [respuesta que suena a su voz interna]
+- Opción B: [respuesta que suena a su voz interna]
+- Opción C: [respuesta que suena a su voz interna]
+Respuesta que más convierte: [cuál y por qué]
+
+## GUIÓN DE AUDIOS/VIDEOS
+Para cada pieza de audio/video:
+**[NOMBRE] — [duración] — [tono de actuación exacto]**
+GUIÓN COMPLETO palabra por palabra:
+"[texto completo, con pausas dramáticas marcadas con (...), énfasis marcados en MAYÚSCULAS, instrucciones de actuación entre [corchetes]]"
+Función en el embudo: [qué creencia destruye o construye]
+
+## DESTRUCCIÓN DE OBJECIONES
+Para cada objeción: el momento EXACTO del embudo donde se neutraliza (antes de que el prospecto la verbalice), el argumento específico para este nicho y el formato en que se entrega (audio, texto, historia, dato).
+
+## MECANISMO DE URGENCIA
+Urgencia que sea 100% REAL y verificable, no manufacturada. Específica para este producto/zona/nicho. Incluye el copy exacto y cómo se implementa técnicamente (fecha dinámica con JS, contador de spots, etc.).
+
+## CTA Y OFERTA FINAL
+La secuencia exacta de los últimos 3 pasos antes del pago:
+- Qué dice el personaje / qué muestra la pantalla
+- El copy exacto del botón CTA
+- A dónde lleva (llamada, checkout, WhatsApp)
+- La última línea que escucha/lee el prospecto antes de decidir
+
+Responde SOLO con la arquitectura. Sin introducción, sin "aquí está tu arquitectura", sin resumen final. Empieza directo con ## DIAGNÓSTICO DEL NICHO.`;
+}
+
+// ── GENERAR ARQUITECTURA ────────────────
+async function generarArquitectura(){
+  if(!validatePanel(2)) return;
+
+  goPanel(3);
+  
+  const loading = document.getElementById('loading');
+  const terminal = document.getElementById('terminal');
+  const archOutput = document.getElementById('arch-output');
+  const errApi = document.getElementById('err-api');
+  const resultActions = document.getElementById('result-actions');
+
+  loading.classList.add('show');
+  terminal.style.display='none';
+  archOutput.style.display='none';
+  errApi.classList.remove('show');
+  resultActions.style.display='none';
+
+  // Loading animation
+  const loadingSteps = [
+    ['Analizando nicho y avatar...', 15],
+    ['Identificando gatillos psicológicos...', 35],
+    ['Mapeando dolores y objeciones...', 55],
+    ['Diseñando secuencia de micro-compromisos...', 72],
+    ['Generando guiones y copies...', 88],
+    ['Finalizando arquitectura...', 95],
+  ];
+
+  let stepIdx = 0;
+  const loadInterval = setInterval(()=>{
+    if(stepIdx < loadingSteps.length){
+      document.getElementById('loading-label').textContent = loadingSteps[stepIdx][0];
+      document.getElementById('loading-fill').style.width = loadingSteps[stepIdx][1]+'%';
+      stepIdx++;
+    }
+  }, 900);
+
+  try {
+    const response = await fetch('/api/claude', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        max_tokens:6000,
+        stream:true,
+        messages:[{role:'user', content:buildPrompt()}]
+      })
+    });
+
+    if(!response.ok) throw new Error('API error: '+response.status);
+
+    clearInterval(loadInterval);
+    document.getElementById('loading-fill').style.width='100%';
+    document.getElementById('loading-label').textContent='Arquitectura lista ✓';
+    
+    await new Promise(r=>setTimeout(r,600));
+    loading.classList.remove('show');
+    
+    terminal.style.display='block';
+    const tb = document.getElementById('terminal-body');
+    tb.innerHTML = '';
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    fullResultText = '';
+
+    while(true){
+      const {done, value} = await reader.read();
+      if(done) break;
+      
+      buffer += decoder.decode(value, {stream:true});
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for(const line of lines){
+        if(line.startsWith('data: ')){
+          const data = line.slice(6).trim();
+          if(data === '[DONE]') continue;
+          try{
+            const json = JSON.parse(data);
+            // Groq/OpenAI format: choices[0].delta.content
+            const delta = json.choices?.[0]?.delta?.content || '';
+            if(delta){
+              fullResultText += delta;
+              renderTerminal(tb, fullResultText);
+            }
+          } catch(e){}
+        }
+      }
+    }
+
+    // Remove cursor and show structured output
+    tb.innerHTML = tb.innerHTML.replace(/<span class="cursor-blink"><\/span>/g,'');
+    
+    setTimeout(()=>{
+      renderStructured(fullResultText);
+      archOutput.style.display='block';
+      terminal.style.display='none';
+      resultActions.style.display='block';
+    }, 500);
+
+  } catch(err){
+    clearInterval(loadInterval);
+    loading.classList.remove('show');
+    errApi.classList.add('show');
+    errApi.textContent='⚠ ' + (err.message || 'Error de conexión. Inténtalo de nuevo.');
+    console.error(err);
+  }
+}
+
+// ── RENDER TERMINAL (streaming) ──────────
+function renderTerminal(el, text){
+  // Colorize
+  let html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/##\s(.+)/g,'<span class="gold">## $1</span>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--white)">$1</strong>')
+    .replace(/^-\s/gm,'<span class="dim">›</span> ')
+    .replace(/\d+\.\s/g,'<span class="gold">$&</span>');
+  
+  el.innerHTML = html + '<span class="cursor-blink"></span>';
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── RENDER STRUCTURED ───────────────────
+function renderStructured(text){
+  const out = document.getElementById('arch-output');
+  const sections = text.split(/^## /m).filter(Boolean);
+  
+  let html = '';
+  
+  const icons = {
+    'DIAGNÓSTICO':'🧠','GANCHO':'🎣','SECUENCIA':'⚡',
+    'PREGUNTAS':'❓','GUIÓN':'🎬','DESTRUCCIÓN':'🛡',
+    'MECANISMO':'⏰','CTA':'🚀'
+  };
+
+  sections.forEach((sec, i)=>{
+    const lines = sec.trim().split('\n');
+    const title = lines[0].trim();
+    const body = lines.slice(1).join('\n').trim();
+    
+    const iconKey = Object.keys(icons).find(k => title.toUpperCase().includes(k));
+    const icon = icons[iconKey] || '✦';
+
+    const bodyHtml = body
+      .replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--white)">$1</strong>')
+      .replace(/^### (.+)/gm,'<div style="font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin:16px 0 6px">$1</div>')
+      .replace(/^- (.+)/gm,'<div style="display:flex;gap:8px;margin-bottom:6px;font-size:13px;color:var(--dim);line-height:1.5"><span style="color:var(--gold);flex-shrink:0">›</span><span>$1</span></div>')
+      .replace(/^(\d+)\. (.+)/gm,'<div style="display:flex;gap:10px;margin-bottom:10px"><span style="font-family:var(--mono);font-size:11px;color:var(--gold);flex-shrink:0;margin-top:2px">$1.</span><span style="font-size:13px;color:var(--dim);line-height:1.6">$2</span></div>')
+      .replace(/\n\n/g,'</p><p style="margin-bottom:10px">')
+      .replace(/\n/g,'<br>');
+
+    html += `
+      <div class="arch-section" style="animation-delay:${i*0.08}s">
+        <div class="arch-section-title">
+          ${icon} ${title}
+          <span>Sección ${String(i+1).padStart(2,'0')}</span>
+        </div>
+        <div style="font-size:14px;color:var(--dim);line-height:1.7;font-weight:300">
+          <p style="margin-bottom:10px">${bodyHtml}</p>
+        </div>
+      </div>
+    `;
+  });
+
+  // CTA
+  html += `
+    <div class="result-cta">
+      <div class="result-cta-title">ARQUITECTURA LISTA 🎬</div>
+      <div class="result-cta-sub">
+        Tu embudo gamificado está diseñado. El siguiente paso es construirlo con el <strong>Agente Copywriter</strong> que generará todos los copies y guiones.
+      </div>
+    </div>
+  `;
+
+  out.innerHTML = html;
+}
+
+// ── COPY RESULT ─────────────────────────
+function copiarResultado(){
+  if(!fullResultText){ alert('Aún no hay resultado que copiar.'); return; }
+  navigator.clipboard.writeText(fullResultText).then(()=>{
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✓ COPIADO AL PORTAPAPELES';
+    setTimeout(()=>btn.textContent=orig, 2000);
+  }).catch(()=>{
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = fullResultText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+// ── REINICIAR ───────────────────────────
+function reiniciar(){
+  fullResultText = '';
+  document.getElementById('f-nombre').value='';
+  document.getElementById('f-promesa').value='';
+  document.getElementById('f-avatar').value='';
+  document.getElementById('f-dolor1').value='';
+  document.getElementById('f-dolor2').value='';
+  document.getElementById('f-dolor3').value='';
+  document.getElementById('f-deseo').value='';
+  document.getElementById('f-extra').value='';
+  document.querySelectorAll('.radio-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.check-item').forEach(c=>c.classList.remove('checked'));
+  document.getElementById('arch-output').innerHTML='';
+  document.getElementById('terminal-body').innerHTML='';
+  goPanel(0);
+}
+</script>
+</body>
+</html>
